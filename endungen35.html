@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Endungen-Domino: Klick-Modus</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --accent: #3498db;     /* Auswahlfarbe */
+            --success: #27ae60;
+            --error: #e74c3c;
+            --bg: #f0f2f5;
+            --tile-bg: #ffffff;
+            --border: #bdc3c7;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--primary);
+            margin: 0;
+            padding: 10px;
+            line-height: 1.5;
+            user-select: none; /* Textauswahl verhindern für besseres App-Feeling */
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding-bottom: 80px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        h1 { color: var(--accent); margin: 0 0 5px 0; font-size: 1.5rem; }
+        p { margin: 0; color: #7f8c8d; font-size: 0.9rem; }
+
+        .intro-box {
+            background-color: #eaf2f8;
+            border-left: 5px solid var(--accent);
+            padding: 10px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+
+        /* --- GAME BOARD (Slots) --- */
+        .board-label {
+            font-weight: bold;
+            margin-bottom: 10px;
+            display: block;
+            color: #555;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+        }
+
+        .domino-chain {
+            display: flex;
+            flex-wrap: wrap; /* Nebeneinander, umbrechen wenn kein Platz */
+            gap: 10px;
+            justify-content: center; /* Zentriert */
+            margin-bottom: 30px;
+            background-color: #dde1e7;
+            padding: 20px;
+            border-radius: 12px;
+            min-height: 160px;
+            border: 2px inset #ccc;
+        }
+
+        /* --- TILES & SLOTS Common Styles --- */
+        .tile-shape {
+            width: 140px;
+            height: 90px;
+            border-radius: 6px;
+            display: flex;
+            flex-direction: column;
+            box-sizing: border-box;
+            font-size: 0.85rem;
+            position: relative;
+        }
+
+        @media (max-width: 400px) {
+            .tile-shape { width: 120px; height: 80px; font-size: 0.75rem; }
+            .domino-chain { padding: 10px; gap: 5px; }
+        }
+
+        /* --- SLOTS (Die leeren Felder) --- */
+        .slot {
+            border: 2px dashed #999;
+            background-color: rgba(255,255,255,0.4);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: background 0.2s, border-color 0.2s;
+        }
+
+        .slot::after {
+            content: "Hier ablegen";
+            color: #888;
+            font-size: 0.7rem;
+            text-align: center;
+        }
+
+        /* Wenn ein Stein ausgewählt ist, leuchten die Slots */
+        .slot.highlight-target {
+            background-color: #d6eaf8;
+            border-color: var(--accent);
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { border-color: var(--accent); }
+            50% { border-color: white; }
+            100% { border-color: var(--accent); }
+        }
+
+        /* Feedback Colors Slots */
+        .slot.correct { border: 2px solid var(--success); background-color: #d4edda; }
+        .slot.wrong { border: 2px solid var(--error); background-color: #f8d7da; }
+
+
+        /* --- TILES (Die Spielsteine) --- */
+        .tile {
+            background-color: var(--tile-bg);
+            border: 1px solid #999;
+            box-shadow: 0 3px 5px rgba(0,0,0,0.2);
+            cursor: pointer;
+            transition: transform 0.1s, border 0.1s, box-shadow 0.1s;
+            overflow: hidden;
+        }
+
+        .tile:hover { transform: translateY(-2px); }
+        
+        /* Status: Selected */
+        .tile.selected {
+            border: 3px solid var(--accent);
+            box-shadow: 0 0 10px var(--accent);
+            transform: scale(1.05);
+            z-index: 10;
+        }
+
+        /* Startstein */
+        .start-tile {
+            border: 2px solid #2c3e50;
+            cursor: default;
+        }
+        .start-tile:hover { transform: none; }
+
+        /* Innere Aufteilung der Steine */
+        .half {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2px 5px;
+            text-align: center;
+            line-height: 1.2;
+        }
+
+        .half-top {
+            border-bottom: 1px solid #ccc;
+            background: #fff;
+            color: #333;
+            font-style: italic;
+        }
+        
+        .start-tile .half-top { background: #34495e; color: #fff; font-weight: bold; }
+        
+        .half-bottom {
+            background: #f4f4f4;
+            color: var(--accent); /* Grammatik-Signal */
+            font-weight: bold;
+        }
+
+        /* --- POOL AREA (Unten) --- */
+        .pool-container {
+            background-color: white;
+            padding: 15px;
+            border-radius: 12px;
+            min-height: 120px;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+        }
+
+        .tile-pool {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        /* Controls */
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            position: sticky;
+            bottom: 0;
+            background: rgba(240, 242, 245, 0.95);
+            padding: 15px 0;
+            border-top: 1px solid #ddd;
+            z-index: 100;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            color: white;
+            font-size: 1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .btn-check { background-color: var(--success); }
+        .btn-reset { background-color: #7f8c8d; }
+        .btn-solve { background-color: #f39c12; }
+
+        /* Feedback */
+        .feedback {
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 10px;
+            min-height: 20px;
+            display: none;
+        }
+        .feedback.success { color: var(--success); display: block; }
+        .feedback.error { color: var(--error); display: block; }
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Endungen-Domino</h1>
+        <p>Logik-Puzzle</p>
+    </header>
+
+    <div class="intro-box">
+        <strong>So geht's (Klicken statt Ziehen):</strong>
+        <br>1. Klicken Sie auf einen Stein unten im <strong>Vorrat</strong> (er leuchtet blau).
+        <br>2. Klicken Sie oben auf ein <strong>leeres Feld</strong>, um ihn abzulegen.
+        <br>3. Um einen Fehler zu korrigieren, klicken Sie auf den Stein oben – er springt zurück.
+    </div>
+
+    <!-- Feedback -->
+    <div class="feedback" id="feedback"></div>
+
+    <!-- SPIELFELD -->
+    <span class="board-label">Die Kette (Start bis Ende):</span>
+    <div class="domino-chain" id="chain">
+        <!-- Start Tile (Fixed) -->
+        <div class="tile-shape start-tile">
+            <div class="half half-top">START</div>
+            <div class="half half-bottom">... с которыми</div>
+        </div>
+
+        <!-- Slots 1-5 -->
+        <div class="tile-shape slot" onclick="handleSlotClick(this)" data-expected="1"></div>
+        <div class="tile-shape slot" onclick="handleSlotClick(this)" data-expected="2"></div>
+        <div class="tile-shape slot" onclick="handleSlotClick(this)" data-expected="3"></div>
+        <div class="tile-shape slot" onclick="handleSlotClick(this)" data-expected="4"></div>
+        <div class="tile-shape slot" onclick="handleSlotClick(this)" data-expected="5"></div>
+    </div>
+
+    <!-- VORRAT -->
+    <span class="board-label">Vorrat (Anklicken zum Auswählen):</span>
+    <div class="pool-container">
+        <div class="tile-pool" id="pool">
+            <!-- Tiles generated by JS -->
+        </div>
+    </div>
+
+    <div class="controls">
+        <button class="btn btn-check" onclick="checkGame()">Überprüfen</button>
+        <button class="btn btn-reset" onclick="resetGame()">Zurücksetzen</button>
+        <button class="btn btn-solve" onclick="solveGame()">Lösung</button>
+    </div>
+</div>
+
+<script>
+    // DATA CONFIGURATION
+    // Logic Chain:
+    // Start Bottom: "... с которыми" (Instr)
+    // 1. Top: "мы гуляем" (Match Instr) -> Bottom: "... которых" (Akk/Gen)
+    // 2. Top: "я знаю" (Match Akk Belebt) -> Bottom: "... которым" (Dat)
+    // 3. Top: "мы помогаем" (Match Dat) -> Bottom: "... о которых" (Präp)
+    // 4. Top: "мы думаем" (Match Präp) -> Bottom: "... которые" (Nom)
+    // 5. Top: "лежат здесь" (Match Nom) -> Bottom: "ENDE"
+
+    const tilesData = [
+        { id: 1, top: "мы гуляем", bottom: "... которых" },
+        { id: 2, top: "я знаю", bottom: "... которым" },
+        { id: 3, top: "мы помогаем", bottom: "... о которых" },
+        { id: 4, top: "мы думаем", bottom: "... которые" },
+        { id: 5, top: "лежат здесь", bottom: "ENDE" }
+    ];
+
+    let selectedTile = null;
+
+    // --- INITIALIZATION ---
+    document.addEventListener("DOMContentLoaded", () => {
+        initGame();
+    });
+
+    function initGame() {
+        const pool = document.getElementById('pool');
+        pool.innerHTML = '';
+        
+        // Shuffle
+        const shuffled = [...tilesData].sort(() => Math.random() - 0.5);
+
+        shuffled.forEach(data => {
+            const tile = document.createElement('div');
+            tile.className = 'tile-shape tile';
+            tile.setAttribute('data-id', data.id);
+            tile.onclick = function() { handleTileClick(this); }; // Click Event
+            
+            tile.innerHTML = `
+                <div class="half half-top">${data.top}</div>
+                <div class="half half-bottom">${data.bottom}</div>
+            `;
+            pool.appendChild(tile);
+        });
+    }
+
+    // --- INTERACTION LOGIC (CLICK) ---
+
+    // 1. User clicks a Tile
+    function handleTileClick(tile) {
+        // Fall 1: Stein liegt schon in einem Slot -> Zurück in den Pool
+        if (tile.parentElement.classList.contains('slot')) {
+            const pool = document.getElementById('pool');
+            // Remove highlighting/status before moving
+            tile.classList.remove('selected');
+            pool.appendChild(tile);
+            
+            // Clean up UI
+            updateSlotVisuals();
+            return;
+        }
+
+        // Fall 2: Stein liegt im Pool -> Auswählen
+        
+        // Wenn schon einer ausgewählt war, deselektieren
+        if (selectedTile) {
+            selectedTile.classList.remove('selected');
+        }
+
+        // Wenn wir denselben anklicken, Auswahl aufheben
+        if (selectedTile === tile) {
+            selectedTile = null;
+            updateSlotVisuals();
+            return;
+        }
+
+        // Neuen Stein auswählen
+        selectedTile = tile;
+        tile.classList.add('selected');
+        updateSlotVisuals(); // Slots hervorheben
+    }
+
+    // 2. User clicks a Slot
+    function handleSlotClick(slot) {
+        // Nur reagieren, wenn ein Stein ausgewählt ist UND der Slot leer ist
+        if (selectedTile && slot.children.length === 0) {
+            slot.appendChild(selectedTile);
+            selectedTile.classList.remove('selected');
+            selectedTile = null;
+            
+            // Reset Feedback
+            const fb = document.getElementById('feedback');
+            fb.textContent = '';
+            fb.className = 'feedback';
+            document.querySelectorAll('.slot').forEach(s => s.classList.remove('correct', 'wrong'));
+            
+            updateSlotVisuals();
+        }
+    }
+
+    // Visual Helpers
+    function updateSlotVisuals() {
+        const slots = document.querySelectorAll('.slot');
+        slots.forEach(slot => {
+            if (selectedTile && slot.children.length === 0) {
+                slot.classList.add('highlight-target');
+            } else {
+                slot.classList.remove('highlight-target');
+            }
+        });
+    }
+
+    // --- GAME LOGIC ---
+
+    function checkGame() {
+        const slots = document.querySelectorAll('.slot');
+        const feedback = document.getElementById('feedback');
+        let allCorrect = true;
+        let filledCount = 0;
+
+        slots.forEach(slot => {
+            // Check if filled
+            if (slot.children.length === 0) {
+                allCorrect = false;
+                slot.classList.remove('correct', 'wrong');
+                return;
+            }
+            filledCount++;
+
+            const tile = slot.children[0];
+            const expectedId = slot.getAttribute('data-expected');
+            const actualId = tile.getAttribute('data-id');
+
+            if (expectedId === actualId) {
+                slot.classList.add('correct');
+                slot.classList.remove('wrong');
+            } else {
+                slot.classList.add('wrong');
+                slot.classList.remove('correct');
+                allCorrect = false;
+            }
+        });
+
+        if (filledCount < slots.length) {
+            feedback.textContent = "Die Kette ist noch nicht vollständig.";
+            feedback.className = "feedback error";
+        } else if (allCorrect) {
+            feedback.textContent = "Fantastisch! Alle Anschlüsse passen.";
+            feedback.className = "feedback success";
+        } else {
+            feedback.textContent = "Einige Verbindungen sind falsch (rot).";
+            feedback.className = "feedback error";
+        }
+    }
+
+    function resetGame() {
+        const pool = document.getElementById('pool');
+        const slots = document.querySelectorAll('.slot');
+        
+        // Move all back to pool
+        slots.forEach(slot => {
+            if(slot.firstChild) pool.appendChild(slot.firstChild);
+            slot.classList.remove('correct', 'wrong', 'highlight-target');
+        });
+
+        selectedTile = null;
+        document.querySelectorAll('.tile').forEach(t => t.classList.remove('selected'));
+        
+        const fb = document.getElementById('feedback');
+        fb.textContent = '';
+        fb.className = 'feedback';
+
+        // Shuffle visually
+        const tiles = Array.from(pool.children);
+        tiles.sort(() => Math.random() - 0.5);
+        tiles.forEach(tile => pool.appendChild(tile));
+    }
+
+    function solveGame() {
+        resetGame(); // Clean board
+        
+        const slots = document.querySelectorAll('.slot');
+        slots.forEach(slot => {
+            const expId = slot.getAttribute('data-expected');
+            // Find tile by data-id
+            const tile = document.querySelector(`.tile[data-id='${expId}']`);
+            if (tile) {
+                slot.appendChild(tile);
+                slot.classList.add('correct');
+            }
+        });
+
+        const fb = document.getElementById('feedback');
+        fb.textContent = "Lösung angezeigt.";
+        fb.className = "feedback success";
+    }
+
+</script>
+
+</body>
+</html>
