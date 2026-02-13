@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Labyrinth der Fälle: 8 Level</title>
+    <style>
+        :root {
+            --bg-color: #2c3e50;    /* Dunkles Blau */
+            --path-color: #34495e;  /* Raum-Hintergrund */
+            --text-color: #ecf0f1;
+            --accent: #f1c40f;      /* Gold */
+            --correct: #27ae60;     /* Grün */
+            --wrong: #c0392b;       /* Rot */
+            --btn-bg: #ffffff;
+            --btn-text: #2c3e50;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 15px;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+            padding-bottom: 80px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            background: rgba(0,0,0,0.2);
+            padding: 20px;
+            border-radius: 12px;
+            border: 2px solid #7f8c8d;
+        }
+
+        h1 { margin: 0 0 10px 0; color: var(--accent); font-size: 1.8rem; letter-spacing: 1px; }
+        p { margin: 0; opacity: 0.9; }
+
+        .intro-box {
+            background-color: var(--path-color);
+            border-left: 5px solid var(--accent);
+            padding: 15px;
+            margin-bottom: 30px;
+            border-radius: 4px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        /* --- STAGES (The Rooms) --- */
+        .stage {
+            background-color: var(--path-color);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 2px solid #555;
+            transition: all 0.5s ease-in-out;
+            opacity: 0;
+            transform: translateY(20px);
+            display: none; /* Hidden by default */
+            position: relative;
+        }
+
+        /* Connecting Line visual */
+        .stage::before {
+            content: '';
+            position: absolute;
+            top: -22px;
+            left: 50%;
+            width: 4px;
+            height: 20px;
+            background-color: #7f8c8d;
+            transform: translateX(-50%);
+        }
+        .stage:first-of-type::before { display: none; } /* No line for first room */
+
+        .stage.active {
+            display: block;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .stage.completed {
+            border-color: var(--correct);
+            opacity: 0.5; /* Dim completed rooms */
+            filter: grayscale(0.5);
+        }
+
+        .room-title {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            color: #bdc3c7;
+            margin-bottom: 10px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .question-text {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            font-weight: 500;
+            text-align: center;
+        }
+
+        .clue {
+            color: var(--accent);
+            font-weight: bold;
+            border-bottom: 1px dashed var(--accent);
+        }
+
+        /* DOORS (Options) */
+        .doors-container {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .door-btn {
+            background-color: var(--btn-bg);
+            color: var(--btn-text);
+            border: none;
+            padding: 15px 20px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            flex: 1;
+            min-width: 120px;
+            transition: transform 0.1s, background 0.2s;
+            box-shadow: 0 4px 0 #95a5a6;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .door-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 0 0 #95a5a6;
+        }
+
+        /* Door States */
+        .door-btn.correct {
+            background-color: var(--correct) !important;
+            color: white !important;
+            box-shadow: 0 4px 0 #1e8449;
+            pointer-events: none; /* Lock button */
+        }
+        .door-btn.correct::after { content: " ✓"; }
+
+        .door-btn.wrong {
+            background-color: var(--wrong) !important;
+            color: white !important;
+            box-shadow: 0 4px 0 #922b21;
+            opacity: 0.6;
+        }
+        .door-btn.wrong::after { content: " ✕ (Sackgasse)"; font-size: 0.8rem; display: block; }
+
+        /* WIN SCREEN */
+        .win-screen {
+            background: linear-gradient(135deg, #f1c40f, #e67e22);
+            color: white;
+            text-align: center;
+            padding: 40px;
+            border-radius: 12px;
+            margin-top: 30px;
+            display: none;
+            animation: popIn 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* CONTROLS */
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 30px;
+            position: sticky;
+            bottom: 0;
+            background: rgba(44, 62, 80, 0.95);
+            padding: 15px 0;
+            border-top: 1px solid #555;
+            z-index: 100;
+        }
+
+        .ctrl-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            color: white;
+            font-size: 1rem;
+        }
+
+        .btn-reset { background-color: #7f8c8d; }
+        .btn-solve { background-color: #e67e22; }
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>🏰 Labyrinth der Fälle</h1>
+        <p>Finden Sie den richtigen Weg durch die Grammatik.</p>
+    </header>
+
+    <div class="intro-box">
+        <strong>Spielregeln:</strong>
+        <br>Sie stehen am Eingang eines Labyrinths. Jede Tür hat eine Endung.
+        <br>Schauen Sie auf den Hinweis im Satz (z.B. "mit...").
+        <br>Nur die richtige Endung öffnet die Tür zum nächsten Raum.
+    </div>
+
+    <!-- ROOM 1: Instrumental (Start) -->
+    <div class="stage active" id="room-1">
+        <div class="room-title"><span>Raum 1</span> <span>Der Eingang</span></div>
+        <div class="question-text">
+            "Das sind Freunde, <span class="clue">mit (с)</span> ..."
+        </div>
+        <div class="doors-container">
+            <button class="door-btn" onclick="choosePath(1, 0)">которыми</button>
+            <button class="door-btn" onclick="choosePath(1, 1)">которых</button>
+            <button class="door-btn" onclick="choosePath(1, 2)">которые</button>
+        </div>
+    </div>
+
+    <!-- ROOM 2: Genitiv (Verneinung) -->
+    <div class="stage" id="room-2">
+        <div class="room-title"><span>Raum 2</span> <span>Der dunkle Gang</span></div>
+        <div class="question-text">
+            "Hier sind Bücher, <span class="clue">keine (нет)</span> ..."
+        </div>
+        <div class="doors-container">
+            <button class="door-btn" onclick="choosePath(2, 0)">которые</button>
+            <button class="door-btn" onclick="choosePath(2, 1)">которых</button>
+        </div>
+    </div>
+
+    <!-- ROOM 3: Dativ (Helfen) -->
+    <div class="stage" id="room-3">
+        <div class="room-title"><span>Raum 3</span> <span>Die Brücke</span></div>
+        <div class="question-text">
+            "Das sind Leute, <span class="clue">denen wir helfen</span> ..."
+        </div>
+        <div class="doors-container">
+            <button class="door-btn" onclick="choosePath(3, 0)">которыми</button>
+            <button class="door-btn" onclick="choosePath(3, 1)">которых</button>
+            <button class="door-btn" onclick="choosePath(3, 2)">которым</button>
+        </div>
+    </div>
+
+    <!-- ROOM 4: Präpositiv (Über) -->
+    <div class="stage" id="room-4">
+        <div class="room-title"><span>Raum 4</span> <span>Die Bibliothek</span></div>
+        <div class="question-text">
+            "Das sind Filme, <span class="clue">über (о)</span> ..."
+        </div>
+        <div class="doors-container">
+            <button class="door-btn" onclick="choosePath(4, 0)">которых</button>
+            <button class="door-btn" onclick="choosePath(4, 1)">которые</button>
+            <button class="door-btn" onclick="choosePath(4, 2)">которым</button>
+        </div>
+    </div>
+
+    <!-- ROOM 5: Akkusativ (Unbelebt) -->
+    <div class="stage" id="room-5">
+        <div class="room-title"><span>Raum 5</span> <span>Die Garage</span></div>
+        <div class="question-text">
+            "Ich sehe die <strong>Autos</strong> (unbelebt), ..."
+        </div>
+        <div class="doors-container">
+            <button class="door-btn" onclick="choosePath(5, 0)">которых</button>
+            <button class="door-btn" onclick="choosePath(5, 1)">которые</button>
+            <button class="door-btn" onclick="choosePath(5, 2)">которыми</button>
+        </div>
+    </div>
+
+    <!-- ROOM 6: Akkusativ (Belebt) -->
+    <div class="stage" id="room-6">
+        <div class="room-title"><span>Raum 6</span> <span>Der Ballsaal</span></div>
+        <div class="question-text">
+            "Ich sehe die <strong>Gäste</strong> (belebt), ..."
+        </div>
+        <div class="doors-container">
+            <button class="door-btn" onclick="choosePath(6, 0)">которые</button>
+            <button class="door-btn" onclick="choosePath(6, 1)">которых</button>
+            <button class="door-btn" onclick="choosePath(6, 2)">которыми</button>
+        </div>
+    </div>
+
+    <!-- ROOM 7: Dativ + Präposition (zu) -->
+    <div class="stage" id="room-7">
+        <div class="room-title"><span>Raum 7</span> <span>Der Wegweiser</span></div>
+        <div class="question-text">
+            "Das sind Ärzte, <span class="clue">zu (к)</span> ..."
+        </div>
+        <div class="doors-container">
+            <button class="door-btn" onclick="choosePath(7, 0)">к которым</button>
+            <button class="door-btn" onclick="choosePath(7, 1)">к которых</button>
+            <button class="door-btn" onclick="choosePath(7, 2)">к которые</button>
+        </div>
+    </div>
+
+    <!-- ROOM 8: Genitiv + Präposition (bei/haben) -->
+    <div class="stage" id="room-8">
+        <div class="room-title"><span>Raum 8</span> <span>Das Torhaus</span></div>
+        <div class="question-text">
+            "Das sind Kollegen, <span class="clue">die Geld haben (bei, у)</span> ..."
+        </div>
+        <div class="doors-container">
+            <button class="door-btn" onclick="choosePath(8, 0)">у которых</button>
+            <button class="door-btn" onclick="choosePath(8, 1)">у которые</button>
+        </div>
+    </div>
+
+    <!-- WIN SCREEN -->
+    <div class="win-screen" id="win-screen">
+        <h2>🎉 Ziel erreicht! 🎉</h2>
+        <p>Sie haben den Ausgang gefunden!</p>
+        <p style="font-size:3rem;">🏆</p>
+    </div>
+
+    <!-- Global Controls -->
+    <div class="controls">
+        <button class="ctrl-btn btn-reset" onclick="resetGame()">Neustart</button>
+        <button class="ctrl-btn btn-solve" onclick="solveGame()">Weg zeigen</button>
+    </div>
+</div>
+
+<script>
+    // Configuration: Correct answers indices for each room (0-based)
+    
+    // Room 1 (Instr): "mit" -> kotorymi (Index 0)
+    // Room 2 (Gen): "keine" -> kotorych (Index 1)
+    // Room 3 (Dat): "helfen" -> kotorym (Index 2)
+    // Room 4 (Prep): "über" -> kotorych (Index 0)
+    // Room 5 (Akk Unbelebt): "sehe Autos" -> kotorye (Index 1)
+    // Room 6 (Akk Belebt): "sehe Gäste" -> kotorych (Index 1)
+    // Room 7 (Dat + k): "zu (к)" -> к которым (Index 0)
+    // Room 8 (Gen + u): "bei (у)" -> у которых (Index 0)
+
+    const correctPath = [0, 1, 2, 0, 1, 1, 0, 0]; 
+    const totalRooms = 8;
+
+    function choosePath(roomNum, choiceIndex) {
+        const room = document.getElementById(`room-${roomNum}`);
+        const buttons = room.querySelectorAll('.door-btn');
+        const correctIndex = correctPath[roomNum - 1];
+
+        if (choiceIndex === correctIndex) {
+            // CORRECT CHOICE
+            buttons[choiceIndex].classList.add('correct');
+            buttons[choiceIndex].innerHTML = buttons[choiceIndex].innerText; 
+            
+            // Mark room as completed
+            room.classList.add('completed');
+            
+            // Disable all buttons in this room
+            buttons.forEach(btn => btn.disabled = true);
+
+            // Show next room or Win screen
+            if (roomNum < totalRooms) {
+                const nextRoom = document.getElementById(`room-${roomNum + 1}`);
+                nextRoom.classList.add('active');
+                
+                // Scroll smoothly to next room
+                setTimeout(() => {
+                    nextRoom.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 300);
+            } else {
+                // WIN!
+                const win = document.getElementById('win-screen');
+                win.style.display = 'block';
+                setTimeout(() => {
+                    win.scrollIntoView({ behavior: 'smooth' });
+                }, 300);
+            }
+
+        } else {
+            // WRONG CHOICE
+            const btn = buttons[choiceIndex];
+            btn.classList.add('wrong');
+        }
+    }
+
+    function resetGame() {
+        // Reset Win Screen
+        document.getElementById('win-screen').style.display = 'none';
+
+        // Loop through all rooms
+        for (let i = 1; i <= totalRooms; i++) {
+            const room = document.getElementById(`room-${i}`);
+            const buttons = room.querySelectorAll('.door-btn');
+
+            // Reset Classes
+            room.classList.remove('completed');
+            if (i > 1) room.classList.remove('active'); // Hide all except room 1
+
+            // Reset Buttons
+            buttons.forEach(btn => {
+                btn.className = 'door-btn'; // Remove correct/wrong
+                btn.disabled = false;
+            });
+        }
+
+        // Scroll top
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function solveGame() {
+        resetGame();
+
+        // Recursive function to walk through with delay
+        let currentRoom = 1;
+
+        function step() {
+            if (currentRoom > totalRooms) return;
+
+            const correctIdx = correctPath[currentRoom - 1];
+            choosePath(currentRoom, correctIdx);
+
+            currentRoom++;
+            if (currentRoom <= totalRooms) {
+                setTimeout(step, 400); // Fast steps for solution
+            }
+        }
+
+        step();
+    }
+
+</script>
+
+</body>
+</html>
