@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russisch Vokabeltrainer</title>
+    <style>
+        :root {
+            /* Farbpalette (Grüntöne) */
+            --primary-color: #2e7d32;      /* Dunkles Grün */
+            --primary-light: #4caf50;      /* Helles Grün */
+            --primary-dark: #1b5e20;       /* Sehr dunkles Grün */
+            --accent-color: #81c784;       /* Akzent */
+            --bg-color: #e8f5e9;           /* Heller Hintergrund */
+            --card-bg: #ffffff;            /* Kartenhintergrund */
+            --text-color: #333333;         /* Dunkle Schrift */
+            --text-light: #666666;         /* Hellere Schrift für Notizen */
+            --shadow: 0 4px 15px rgba(0,0,0,0.15);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 700px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        h1 {
+            color: var(--primary-dark);
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 1.8rem;
+        }
+
+        /* Fortschrittsanzeige */
+        .progress-bar {
+            background-color: #c8e6c9;
+            padding: 8px 16px;
+            border-radius: 20px;
+            color: var(--primary-dark);
+            font-weight: bold;
+            font-size: 1rem;
+        }
+
+        /* Karten-Container (Scene) */
+        .card-scene {
+            width: 100%;
+            height: 350px;
+            perspective: 1000px; /* Notwendig für 3D Effekt */
+            cursor: pointer;
+        }
+
+        /* Die Karte selbst */
+        .card {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
+            border-radius: 15px;
+            box-shadow: var(--shadow);
+        }
+
+        /* Klasse zum Umdrehen */
+        .card.is-flipped {
+            transform: rotateY(180deg);
+        }
+
+        /* Vorder- und Rückseite gemeinsam */
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden; /* Rückseite unsichtbar machen wenn gedreht */
+            border-radius: 15px;
+            background-color: var(--card-bg);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            text-align: center;
+            border: 2px solid var(--primary-light);
+        }
+
+        /* Spezifisch Vorderseite */
+        .card-front {
+            z-index: 2;
+        }
+
+        /* Spezifisch Rückseite */
+        .card-back {
+            transform: rotateY(180deg);
+            background-color: #f1f8e9; /* Leicht anderer Hintergrund hinten */
+            border-color: var(--primary-color);
+        }
+
+        /* Text Styling auf der Karte */
+        .card-content {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .term {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--primary-dark);
+            margin-bottom: 10px;
+            line-height: 1.2;
+        }
+
+        .definition {
+            font-size: 2rem;
+            color: var(--text-color);
+            margin-bottom: 10px;
+            line-height: 1.2;
+        }
+
+        .note {
+            font-size: 1.1rem;
+            color: var(--text-light);
+            font-style: italic;
+            margin-top: 5px;
+        }
+
+        .hint {
+            position: absolute;
+            bottom: 15px;
+            font-size: 0.8rem;
+            color: #999;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Steuerelemente */
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            width: 100%;
+        }
+
+        .nav-group, .action-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        button:hover {
+            background-color: var(--primary-dark);
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        button.secondary {
+            background-color: var(--accent);
+            color: var(--primary-dark);
+        }
+
+        button.secondary:hover {
+            background-color: var(--primary-light);
+            color: white;
+        }
+
+        /* Responsives Design */
+        @media (max-width: 600px) {
+            h1 { font-size: 1.5rem; }
+            .card-scene { height: 280px; }
+            .term { font-size: 2rem; }
+            .definition { font-size: 1.6rem; }
+            .controls { flex-direction: column; align-items: center; }
+            .nav-group, .action-group { width: 100%; justify-content: space-between; }
+            button { flex: 1; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Russisch Vokabeltrainer</h1>
+        <div id="progress" class="progress-bar">1 / 70</div>
+    </header>
+
+    <!-- Karteikarte -->
+    <div class="card-scene" onclick="flipCard()">
+        <div class="card" id="flashcard">
+            
+            <!-- Vorderseite -->
+            <div class="card-face card-front">
+                <div class="card-content">
+                    <div class="term" id="front-text">Wort</div>
+                    <div class="note" id="front-note"></div>
+                </div>
+                <div class="hint">Klicken zum Umdrehen</div>
+            </div>
+
+            <!-- Rückseite -->
+            <div class="card-face card-back">
+                <div class="card-content">
+                    <div class="definition" id="back-text">Bedeutung</div>
+                    <div class="note" id="back-note"></div>
+                </div>
+                <div class="hint">Klicken zum Zurückdrehen</div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Steuerung -->
+    <div class="controls">
+        <div class="nav-group">
+            <button onclick="prevCard()" title="Pfeil Links">← Vorherige</button>
+            <button onclick="nextCard()" title="Pfeil Rechts">Nächste →</button>
+        </div>
+        <div class="action-group">
+            <button class="secondary" onclick="shuffleCards()" title="Reihenfolge mischen">Mischen 🔀</button>
+            <button class="secondary" onclick="resetToStart()" title="Zurück zum Start (Pos1)">Anfang ↺</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- Datenbasis ---
+    const rawData = [
+        { id: 1, ru: "лю́ди", de: "die Leute / Menschen", noteRu: "", noteDe: "" },
+        { id: 2, ru: "де́ньги", de: "das Geld", noteRu: "(Pluralwort)", noteDe: "" },
+        { id: 3, ru: "кото́рые", de: "die / welche (Relativpronomen)", noteRu: "(Pl.)", noteDe: "" },
+        { id: 4, ru: "жить / прожи́ть", de: "leben / wohnen", noteRu: "", noteDe: "" },
+        { id: 5, ru: "нет", de: "es gibt nicht / kein", noteRu: "(+ Genitiv)", noteDe: "" },
+        { id: 6, ru: "дари́ть / подари́ть", de: "schenken", noteRu: "", noteDe: "" },
+        { id: 7, ru: "цветы́", de: "die Blumen", noteRu: "(Sg. цвето́к)", noteDe: "" },
+        { id: 8, ru: "знать / узна́ть", de: "wissen / kennen / erfahren", noteRu: "", noteDe: "" },
+        { id: 9, ru: "разгова́ривать", de: "sich unterhalten", noteRu: "(NSV)", noteDe: "" },
+        { id: 10, ru: "говори́ть / сказа́ть", de: "sprechen / sagen", noteRu: "", noteDe: "" },
+        { id: 11, ru: "лежа́ть / полежа́ть", de: "liegen", noteRu: "", noteDe: "" },
+        { id: 12, ru: "кошелёк", de: "der Geldbeutel", noteRu: "", noteDe: "" },
+        { id: 13, ru: "подходи́ть / подойти́", de: "herantreten / zugehen auf", noteRu: "", noteDe: "" },
+        { id: 14, ru: "ви́деть / уви́деть", de: "sehen", noteRu: "", noteDe: "" },
+        { id: 15, ru: "приходи́ть / прийти́", de: "kommen / ankommen (zu Fuß)", noteRu: "", noteDe: "" },
+        { id: 16, ru: "спра́шивать / спроси́ть", de: "fragen", noteRu: "", noteDe: "" },
+        { id: 17, ru: "студе́нты", de: "die Studenten", noteRu: "(Sg. студе́нт)", noteDe: "" },
+        { id: 18, ru: "чита́ть / прочита́ть", de: "lesen", noteRu: "", noteDe: "" },
+        { id: 19, ru: "кни́ги", de: "die Bücher", noteRu: "(Sg. кни́га)", noteDe: "" },
+        { id: 20, ru: "друзья́", de: "die Freunde", noteRu: "(Sg. друг)", noteDe: "" },
+        { id: 21, ru: "звони́ть / позвони́ть", de: "anrufen", noteRu: "", noteDe: "" },
+        { id: 22, ru: "фи́льмы", de: "die Filme", noteRu: "(Sg. фильм)", noteDe: "" },
+        { id: 23, ru: "смотре́ть / посмотре́ть", de: "schauen / ansehen", noteRu: "", noteDe: "" },
+        { id: 24, ru: "де́ти", de: "die Kinder", noteRu: "(Sg. ребёнок)", noteDe: "" },
+        { id: 25, ru: "игра́ть / поигра́ть", de: "spielen", noteRu: "", noteDe: "" },
+        { id: 26, ru: "вопро́сы", de: "die Fragen", noteRu: "(Sg. вопро́с)", noteDe: "" },
+        { id: 27, ru: "ду́мать / поду́мать", de: "denken", noteRu: "", noteDe: "" },
+        { id: 28, ru: "врачи́", de: "die Ärzte", noteRu: "(Sg. врач)", noteDe: "" },
+        { id: 29, ru: "ходи́ть / сходи́ть", de: "gehen (regelmäßig oder hin und zurück)", noteRu: "", noteDe: "" },
+        { id: 30, ru: "колле́ги", de: "die Kollegen", noteRu: "(Sg. колле́га)", noteDe: "" },
+        { id: 31, ru: "маши́ны", de: "die Autos", noteRu: "(Sg. маши́на)", noteDe: "" },
+        { id: 32, ru: "дома́", de: "die Häuser", noteRu: "(Sg. дом)", noteDe: "" },
+        { id: 33, ru: "ко́шки", de: "die Katzen", noteRu: "(Sg. ко́шка)", noteDe: "" },
+        { id: 34, ru: "корми́ть / покорми́ть", de: "füttern", noteRu: "", noteDe: "" },
+        { id: 35, ru: "тури́сты", de: "die Touristen", noteRu: "(Sg. тури́ст)", noteDe: "" },
+        { id: 36, ru: "гуля́ть / погуля́ть", de: "spazieren gehen", noteRu: "", noteDe: "" },
+        { id: 37, ru: "помога́ть / помо́чь", de: "helfen", noteRu: "", noteDe: "" },
+        { id: 38, ru: "пе́сни", de: "die Lieder", noteRu: "(Sg. пе́сня)", noteDe: "" },
+        { id: 39, ru: "слу́шать / послу́шать", de: "zuhören / hören", noteRu: "", noteDe: "" },
+        { id: 40, ru: "де́вушки", de: "die jungen Frauen / Mädchen", noteRu: "(Sg. де́вушка)", noteDe: "" },
+        { id: 41, ru: "петь / спеть", de: "singen", noteRu: "", noteDe: "" },
+        { id: 42, ru: "инструме́нты", de: "die Instrumente / Werkzeuge", noteRu: "(Sg. инструме́нт)", noteDe: "" },
+        { id: 43, ru: "рабо́тать / порабо́тать", de: "arbeiten", noteRu: "", noteDe: "" },
+        { id: 44, ru: "пробле́мы", de: "die Probleme", noteRu: "(Sg. пробле́ма)", noteDe: "" },
+        { id: 45, ru: "учи́ться", de: "lernen / studieren", noteRu: "(NSV)", noteDe: "" },
+        { id: 46, ru: "авто́бусы", de: "die Busse", noteRu: "(Sg. авто́бус)", noteDe: "" },
+        { id: 47, ru: "стоя́ть / постоя́ть", de: "stehen", noteRu: "", noteDe: "" },
+        { id: 48, ru: "люби́ть / полюби́ть", de: "lieben / mögen", noteRu: "", noteDe: "" },
+        { id: 49, ru: "актёры", de: "die Schauspieler", noteRu: "(Sg. актёр)", noteDe: "" },
+        { id: 50, ru: "трамва́и", de: "die Straßenbahnen", noteRu: "(Sg. трамва́й)", noteDe: "" },
+        { id: 51, ru: "ждать / подожда́ть", de: "warten", noteRu: "", noteDe: "" },
+        { id: 52, ru: "иска́ть / найти́", de: "suchen / finden", noteRu: "", noteDe: "" },
+        { id: 53, ru: "поезда́", de: "die Züge", noteRu: "(Sg. по́езд)", noteDe: "" },
+        { id: 54, ru: "встреча́ть / встре́тить", de: "treffen / abholen", noteRu: "", noteDe: "" },
+        { id: 55, ru: "прибыва́ть / прибы́ть", de: "ankommen (Verkehrsmittel)", noteRu: "", noteDe: "" },
+        { id: 56, ru: "го́сти", de: "die Gäste", noteRu: "(Sg. гость)", noteDe: "" },
+        { id: 57, ru: "приезжа́ть / прие́хать", de: "ankommen (gefahren kommen)", noteRu: "", noteDe: "" },
+        { id: 58, ru: "официа́нт", de: "der Kellner", noteRu: "", noteDe: "" },
+        { id: 59, ru: "нести́ / понести́", de: "tragen / bringen", noteRu: "", noteDe: "" },
+        { id: 60, ru: "еда́", de: "das Essen", noteRu: "", noteDe: "" },
+        { id: 61, ru: "есть / съесть", de: "essen", noteRu: "", noteDe: "" },
+        { id: 62, ru: "спать / поспа́ть", de: "schlafen", noteRu: "", noteDe: "" },
+        { id: 63, ru: "фотографи́ровать / сфотографи́ровать", de: "fotografieren", noteRu: "", noteDe: "" },
+        { id: 64, ru: "карти́нки", de: "die Bilder", noteRu: "(Sg. карти́нка)", noteDe: "" },
+        { id: 65, ru: "исто́рии", de: "die Geschichten", noteRu: "(Sg. исто́рия)", noteDe: "" },
+        { id: 66, ru: "пода́рки", de: "die Geschenke", noteRu: "(Sg. пода́рок)", noteDe: "" },
+        { id: 67, ru: "пра́здники", de: "die Feste / Feiertage", noteRu: "(Sg. пра́здник)", noteDe: "" },
+        { id: 68, ru: "но́вости", de: "die Neuigkeiten", noteRu: "(Sg. но́вость)", noteDe: "" },
+        { id: 69, ru: "интере́сный", de: "interessant", noteRu: "", noteDe: "" },
+        { id: 70, ru: "стра́нный", de: "seltsam / komisch", noteRu: "", noteDe: "" }
+    ];
+
+    // --- Status ---
+    let cards = [...rawData]; // Kopie der Daten für Arbeitsspeicher
+    let currentIndex = 0;
+    let isFlipped = false;
+
+    // --- DOM Elemente ---
+    const flashcard = document.getElementById('flashcard');
+    const frontText = document.getElementById('front-text');
+    const frontNote = document.getElementById('front-note');
+    const backText = document.getElementById('back-text');
+    const backNote = document.getElementById('back-note');
+    const progressText = document.getElementById('progress');
+
+    // --- Initialisierung ---
+    function init() {
+        renderCard();
+        setupKeyboardControls();
+    }
+
+    // --- Kernfunktionen ---
+
+    function renderCard() {
+        // Karte zurückdrehen, falls sie gedreht ist (ohne Animation für User-Experience beim Wechsel)
+        if (isFlipped) {
+            flashcard.classList.remove('is-flipped');
+            isFlipped = false;
+        }
+
+        const currentCard = cards[currentIndex];
+
+        // Inhalte setzen
+        frontText.innerText = currentCard.ru;
+        frontNote.innerText = currentCard.noteRu;
+        
+        backText.innerText = currentCard.de;
+        backNote.innerText = currentCard.noteDe;
+
+        // Fortschritt aktualisieren
+        progressText.innerText = `${currentIndex + 1} / ${cards.length}`;
+
+        // Textgröße dynamisch anpassen nach kurzem Timeout (damit Rendering fertig ist)
+        setTimeout(() => {
+            adjustFontSize(frontText, 2.5);
+            adjustFontSize(backText, 2);
+        }, 10);
+    }
+
+    function flipCard() {
+        isFlipped = !isFlipped;
+        flashcard.classList.toggle('is-flipped');
+    }
+
+    function nextCard() {
+        if (currentIndex < cards.length - 1) {
+            currentIndex++;
+            renderCard();
+        } else {
+            // Optional: Loop zum Anfang oder visueller Hinweis
+            // alert("Ende des Stapels erreicht!");
+        }
+    }
+
+    function prevCard() {
+        if (currentIndex > 0) {
+            currentIndex--;
+            renderCard();
+        }
+    }
+
+    function shuffleCards() {
+        // Fisher-Yates Shuffle
+        for (let i = cards.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [cards[i], cards[j]] = [cards[j], cards[i]];
+        }
+        resetToStart();
+    }
+
+    function resetToStart() {
+        currentIndex = 0;
+        renderCard();
+    }
+
+    // --- Hilfsfunktion: Schriftgröße anpassen ---
+    function adjustFontSize(element, baseSizeRem) {
+        // Reset zuerst
+        element.style.fontSize = `${baseSizeRem}rem`;
+        
+        const parent = element.parentElement;
+        let fontSize = baseSizeRem;
+        
+        // Verkleinern solange Text überläuft (ScrollHeight > ClientHeight)
+        while (parent.scrollHeight > parent.clientHeight && fontSize > 0.8) {
+            fontSize -= 0.1;
+            element.style.fontSize = `${fontSize}rem`;
+        }
+    }
+
+    // --- Tastatursteuerung ---
+    function setupKeyboardControls() {
+        document.addEventListener('keydown', (event) => {
+            // Verhindern des Standardverhaltens bei Pfeiltasten/Leertaste (Scrollen)
+            if(["ArrowLeft", "ArrowRight", "Space"].indexOf(event.code) > -1) {
+                // event.preventDefault(); // Optional: Wenn Scrollen stört
+            }
+
+            switch (event.key) {
+                case "ArrowRight":
+                    nextCard();
+                    break;
+                case "ArrowLeft":
+                    prevCard();
+                    break;
+                case " ":
+                case "Enter":
+                    flipCard();
+                    break;
+                case "Home":
+                    resetToStart();
+                    break;
+            }
+        });
+    }
+
+    // Starten
+    window.onload = init;
+
+</script>
+
+</body>
+</html>
