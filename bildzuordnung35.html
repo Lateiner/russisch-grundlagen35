@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Wer ist wer? Bild-Zuordnung</title>
+    <style>
+        :root {
+            --bg: #fdfbf7;
+            --card-bg: #ffffff;
+            --primary: #2c3e50;
+            --accent: #e67e22; /* Orange */
+            --highlight: #3498db; /* Blau für Auswahl */
+            --success: #27ae60;
+            --error: #c0392b;
+            --border: #e0e0e0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--primary);
+            margin: 0;
+            padding: 15px;
+            line-height: 1.5;
+            user-select: none;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding-bottom: 80px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        h1 { margin: 0; color: var(--accent); font-size: 1.6rem; }
+        p { color: #7f8c8d; margin-top: 5px; }
+
+        .intro-box {
+            background: #fff;
+            border-left: 4px solid var(--accent);
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            font-size: 0.95rem;
+        }
+
+        /* --- THE SCENE (Image Grid) --- */
+        .scene-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .image-card {
+            background: var(--card-bg);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        .image-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+        }
+
+        /* Selected State */
+        .image-card.selected {
+            border-color: var(--highlight);
+            background-color: #ebf5fb;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.3);
+        }
+
+        /* Feedback States */
+        .image-card.correct {
+            border-color: var(--success) !important;
+            background-color: #d4edda !important;
+        }
+        .image-card.wrong {
+            border-color: var(--error) !important;
+            background-color: #f8d7da !important;
+            opacity: 0.6;
+        }
+
+        .emoji-scene {
+            font-size: 3rem;
+            display: block;
+            margin-bottom: 10px;
+            line-height: 1.2;
+        }
+
+        .card-label {
+            font-size: 0.85rem;
+            color: #999;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        /* --- THE TASK (Text) --- */
+        .task-container {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid var(--border);
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+
+        .progress {
+            font-size: 0.8rem;
+            color: #aaa;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .sentence {
+            font-size: 1.3rem;
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: #2c3e50;
+        }
+
+        .highlight-word {
+            color: var(--accent);
+            font-weight: bold;
+            text-decoration: underline;
+        }
+
+        /* --- FEEDBACK TEXT --- */
+        .feedback-msg {
+            text-align: center;
+            font-weight: bold;
+            min-height: 24px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        .feedback-msg.success { color: var(--success); display: block; }
+        .feedback-msg.error { color: var(--error); display: block; }
+
+        /* --- CONTROLS --- */
+        .controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            color: white;
+            transition: opacity 0.2s;
+        }
+        .btn:active { opacity: 0.8; }
+
+        .btn-check { background-color: var(--primary); }
+        .btn-next { background-color: var(--accent); display: none; } /* Hidden initially */
+        
+        @media (min-width: 600px) {
+            .scene-grid { grid-template-columns: repeat(4, 1fr); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Wer ist wer?</h1>
+        <p>Bild-Zuordnung mit Relativsätzen</p>
+    </header>
+
+    <div class="intro-box">
+        <strong>Anleitung:</strong>
+        <br>Lesen Sie den russischen Satz. Klicken Sie dann auf die <strong>Gruppe</strong>, die im Satz beschrieben wird.
+    </div>
+
+    <!-- The Visual Scene (Grid) -->
+    <div class="scene-grid">
+        
+        <!-- CARD 1: Eating (Nom) -->
+        <div class="image-card" id="card-1" onclick="selectCard(1)">
+            <span class="emoji-scene">🍕😋</span>
+            <div class="card-label">Die Esser</div>
+        </div>
+
+        <!-- CARD 2: Waiter Serving (Dat) -->
+        <div class="image-card" id="card-2" onclick="selectCard(2)">
+            <span class="emoji-scene">🤵🍽️🤤</span>
+            <div class="card-label">Die Gäste</div>
+        </div>
+
+        <!-- CARD 3: Talking (Instr) -->
+        <div class="image-card" id="card-3" onclick="selectCard(3)">
+            <span class="emoji-scene">🗣️👂💬</span>
+            <div class="card-label">Die Gesprächspartner</div>
+        </div>
+
+        <!-- CARD 4: Being Photographed (Akk Belebt) -->
+        <div class="image-card" id="card-4" onclick="selectCard(4)">
+            <span class="emoji-scene">📸💃🕺</span>
+            <div class="card-label">Die Models</div>
+        </div>
+
+        <!-- CARD 5: No Money (Gen) -->
+        <div class="image-card" id="card-5" onclick="selectCard(5)">
+            <span class="emoji-scene">💸🚫🤷</span>
+            <div class="card-label">Die Armen</div>
+        </div>
+
+        <!-- CARD 6: Sleeping (Nom) -->
+        <div class="image-card" id="card-6" onclick="selectCard(6)">
+            <span class="emoji-scene">😴💤🛏️</span>
+            <div class="card-label">Die Schläfer</div>
+        </div>
+        
+        <!-- CARD 7: Listening (Nom) -->
+        <div class="image-card" id="card-7" onclick="selectCard(7)">
+            <span class="emoji-scene">🎧🎶</span>
+            <div class="card-label">Die Zuhörer</div>
+        </div>
+
+        <!-- CARD 8: Books (Präp) -->
+        <div class="image-card" id="card-8" onclick="selectCard(8)">
+            <span class="emoji-scene">📚🤔</span>
+            <div class="card-label">Die Bücher</div>
+        </div>
+
+    </div>
+
+    <!-- The Task Area -->
+    <div class="task-container">
+        <div class="progress" id="progress-text">Frage 1 von 8</div>
+        <div class="sentence" id="sentence-display">...</div>
+    </div>
+
+    <div class="feedback-msg" id="feedback"></div>
+
+    <div class="controls">
+        <button class="btn btn-check" id="btn-action" onclick="checkAnswer()">Überprüfen</button>
+        <button class="btn btn-next" id="btn-next" onclick="nextQuestion()">Nächste Frage</button>
+    </div>
+
+</div>
+
+<script>
+    const questions = [
+        {
+            targetId: 2, // Waiter serving -> Dat
+            text: "Это люди, <span class='highlight-word'>которым</span> официант несет еду.",
+            hint: "Wem bringt er Essen? (Dativ)"
+        },
+        {
+            targetId: 1, // Eating -> Nom
+            text: "Это люди, <span class='highlight-word'>которые</span> едят пиццу.",
+            hint: "Wer isst? (Nominativ / Subjekt)"
+        },
+        {
+            targetId: 3, // Talking -> Instr
+            text: "Это люди, с <span class='highlight-word'>которыми</span> мы разговариваем.",
+            hint: "Mit wem? (Instrumental)"
+        },
+        {
+            targetId: 5, // No Money -> Gen
+            text: "Это люди, у <span class='highlight-word'>которых</span> нет денег.",
+            hint: "Bei wem? (Genitiv)"
+        },
+        {
+            targetId: 4, // Being photographed -> Akk
+            text: "Это люди, <span class='highlight-word'>которых</span> я фотографирую.",
+            hint: "Wen fotografiere ich? (Akkusativ Belebt)"
+        },
+        {
+            targetId: 6, // Sleeping -> Nom
+            text: "Это люди, <span class='highlight-word'>которые</span> спят.",
+            hint: "Wer schläft? (Nominativ)"
+        },
+        {
+            targetId: 7, // Listening -> Nom
+            text: "Это люди, <span class='highlight-word'>которые</span> слушают музыку.",
+            hint: "Wer hört Musik? (Nominativ)"
+        },
+        {
+            targetId: 8, // Books -> Präp
+            text: "Это книги, о <span class='highlight-word'>которых</span> мы много говорили.",
+            hint: "Über was sprachen wir? (Präpositiv)"
+        }
+    ];
+
+    // Shuffle questions on start
+    questions.sort(() => Math.random() - 0.5);
+
+    let currentQIndex = 0;
+    let selectedCardId = null;
+    let isAnswered = false;
+
+    document.addEventListener("DOMContentLoaded", () => {
+        loadQuestion();
+    });
+
+    function loadQuestion() {
+        const q = questions[currentQIndex];
+        selectedCardId = null;
+        isAnswered = false;
+        
+        document.getElementById('progress-text').textContent = `Frage ${currentQIndex + 1} von ${questions.length}`;
+        document.getElementById('sentence-display').innerHTML = q.text;
+        
+        document.getElementById('btn-action').style.display = 'block';
+        document.getElementById('btn-next').style.display = 'none';
+        
+        document.getElementById('feedback').className = 'feedback-msg';
+        document.getElementById('feedback').textContent = '';
+        document.querySelectorAll('.image-card').forEach(card => {
+            card.classList.remove('selected', 'correct', 'wrong');
+            card.style.pointerEvents = 'auto';
+        });
+    }
+
+    function selectCard(id) {
+        if (isAnswered) return;
+        document.querySelectorAll('.image-card').forEach(c => c.classList.remove('selected'));
+        document.getElementById(`card-${id}`).classList.add('selected');
+        selectedCardId = id;
+    }
+
+    function checkAnswer() {
+        if (selectedCardId === null) {
+            const fb = document.getElementById('feedback');
+            fb.textContent = "Bitte wählen Sie ein Bild aus!";
+            fb.className = "feedback-msg error";
+            return;
+        }
+
+        const q = questions[currentQIndex];
+        const fb = document.getElementById('feedback');
+        const correctCard = document.getElementById(`card-${q.targetId}`);
+        const userCard = document.getElementById(`card-${selectedCardId}`);
+
+        isAnswered = true;
+
+        if (selectedCardId === q.targetId) {
+            userCard.classList.add('correct');
+            userCard.classList.remove('selected');
+            fb.innerHTML = "Richtig! ✓ <br><small>(" + q.hint + ")</small>";
+            fb.className = "feedback-msg success";
+        } else {
+            userCard.classList.add('wrong');
+            userCard.classList.remove('selected');
+            correctCard.classList.add('correct');
+            fb.innerHTML = "Leider falsch. Richtig ist das markierte Bild. <br><small>(" + q.hint + ")</small>";
+            fb.className = "feedback-msg error";
+        }
+
+        document.getElementById('btn-action').style.display = 'none';
+        document.getElementById('btn-next').style.display = 'block';
+        
+        if (currentQIndex === questions.length - 1) {
+            document.getElementById('btn-next').textContent = "Fertig! (Neustart)";
+        } else {
+            document.getElementById('btn-next').textContent = "Nächste Frage";
+        }
+    }
+
+    function nextQuestion() {
+        currentQIndex++;
+        if (currentQIndex >= questions.length) {
+            currentQIndex = 0;
+            // Re-shuffle for next round
+            questions.sort(() => Math.random() - 0.5);
+        }
+        loadQuestion();
+    }
+</script>
+
+</body>
+</html>
