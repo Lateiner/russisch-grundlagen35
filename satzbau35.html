@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Satz-Puzzle: Russische Relativsätze</title>
+    <!-- Polyfill für Touch Drag & Drop (optional, da Klick-Logik primär ist) -->
+    <script src="https://cdn.jsdelivr.net/npm/drag-drop-touch@1.3.1/DragDropTouch.js"></script>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --accent: #8e44ad;     /* Lila für Puzzle-Thema */
+            --success: #27ae60;
+            --error: #c0392b;
+            --bg: #f3f0f5;
+            --card-bg: #ffffff;
+            --border: #dcdcdc;
+            --chip-bg: #ecf0f1;
+            --chip-hover: #d2b4de;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--primary);
+            margin: 0;
+            padding: 15px;
+            line-height: 1.5;
+            user-select: none; /* Verhindert Textauswahl beim schnellen Tippen */
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding-bottom: 80px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            border-bottom: 4px solid var(--accent);
+        }
+
+        h1 { margin: 0 0 10px 0; color: var(--accent); font-size: 1.5rem; }
+        p { margin: 0; color: #7f8c8d; }
+
+        .intro-box {
+            background-color: #fff;
+            border-left: 5px solid var(--accent);
+            padding: 15px;
+            margin-bottom: 25px;
+            border-radius: 4px;
+            font-size: 0.95rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        /* --- PUZZLE CARD --- */
+        .puzzle-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            border: 1px solid var(--border);
+        }
+
+        .card-header {
+            font-weight: bold;
+            color: #95a5a6;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        /* ZONES */
+        .area-label {
+            font-size: 0.8rem;
+            color: #aaa;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .word-zone {
+            min-height: 60px;
+            padding: 10px;
+            border-radius: 8px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+            transition: background 0.3s, border 0.3s;
+        }
+
+        /* Target Zone (Der Satz) */
+        .target-zone {
+            background-color: #fcfcfc;
+            border: 2px dashed #bdc3c7;
+            margin-bottom: 20px;
+        }
+
+        .target-zone.correct {
+            background-color: #d4edda;
+            border-color: var(--success);
+        }
+
+        .target-zone.wrong {
+            background-color: #f8d7da;
+            border-color: var(--error);
+        }
+
+        /* Source Zone (Der Vorrat) */
+        .source-zone {
+            background-color: #f0f2f5;
+            border: 1px solid #e1e8ed;
+        }
+
+        /* WORD CHIPS */
+        .word-chip {
+            background-color: white;
+            border: 1px solid #bdc3c7;
+            border-bottom: 3px solid #bdc3c7;
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.1s;
+            display: inline-block;
+        }
+
+        .word-chip:active {
+            transform: translateY(2px);
+            border-bottom-width: 1px;
+        }
+
+        .word-chip:hover {
+            background-color: #f9f9f9;
+            border-color: var(--accent);
+        }
+
+        /* Mobile Optimization for Chips */
+        @media (max-width: 600px) {
+            .word-chip {
+                padding: 6px 10px;
+                font-size: 1rem;
+                flex-grow: 1; /* Buttons füllen Platz auf Handy */
+                text-align: center;
+            }
+        }
+
+        /* Controls per Card */
+        .card-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            border-top: 1px solid #eee;
+            padding-top: 15px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            color: white;
+            font-size: 0.9rem;
+            transition: opacity 0.2s;
+        }
+        .btn:active { opacity: 0.8; }
+
+        .btn-check { background-color: var(--primary); }
+        .btn-reset { background-color: #95a5a6; }
+        .btn-solve { background-color: var(--accent); }
+
+        /* Feedback */
+        .feedback {
+            margin-top: 10px;
+            font-weight: bold;
+            display: none;
+            text-align: center;
+        }
+        .feedback.success { color: var(--success); }
+        .feedback.error { color: var(--error); }
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Satz-Puzzle: КОТОРЫЕ</h1>
+        <p>Bringen Sie die Wörter in die richtige Reihenfolge.</p>
+    </header>
+
+    <div class="intro-box">
+        <strong>Anleitung:</strong>
+        <br>1. Klicken Sie auf die Wörter im grauen Kasten, um sie nach oben zu verschieben.
+        <br>2. Achten Sie auf Großschreibung (Satzanfang) und Punkt (Satzende).
+        <br>3. Das Relativpronomen (<em>которые, которых...</em>) steht meist direkt nach dem Komma.
+    </div>
+
+    <!-- PUZZLE 1: Akkusativ Belebt -->
+    <div class="puzzle-card" id="p1">
+        <div class="card-header">
+            <span>Satz 1</span>
+            <span>Akkusativ (Belebt)</span>
+        </div>
+        
+        <span class="area-label">Ihr Satz:</span>
+        <div class="word-zone target-zone" id="target-1"></div>
+        
+        <span class="area-label">Wort-Vorrat:</span>
+        <div class="word-zone source-zone" id="source-1"></div>
+
+        <div class="feedback"></div>
+
+        <div class="card-controls">
+            <button class="btn btn-check" onclick="checkPuzzle('p1', ['Это', 'друзья,', 'которых', 'мы', 'ждем.'])">Überprüfen</button>
+            <button class="btn btn-reset" onclick="resetPuzzle('p1')">Zurücksetzen</button>
+            <button class="btn btn-solve" onclick="solvePuzzle('p1', ['Это', 'друзья,', 'которых', 'мы', 'ждем.'])">Lösung</button>
+        </div>
+    </div>
+
+    <!-- PUZZLE 2: Genitiv (Verneinung) -->
+    <div class="puzzle-card" id="p2">
+        <div class="card-header">
+            <span>Satz 2</span>
+            <span>Genitiv (Verneinung)</span>
+        </div>
+        
+        <span class="area-label">Ihr Satz:</span>
+        <div class="word-zone target-zone" id="target-2"></div>
+        
+        <span class="area-label">Wort-Vorrat:</span>
+        <div class="word-zone source-zone" id="source-2"></div>
+
+        <div class="feedback"></div>
+
+        <div class="card-controls">
+            <button class="btn btn-check" onclick="checkPuzzle('p2', ['Вот', 'люди,', 'у', 'которых', 'нет', 'денег.'])">Überprüfen</button>
+            <button class="btn btn-reset" onclick="resetPuzzle('p2')">Zurücksetzen</button>
+            <button class="btn btn-solve" onclick="solvePuzzle('p2', ['Вот', 'люди,', 'у', 'которых', 'нет', 'денег.'])">Lösung</button>
+        </div>
+    </div>
+
+    <!-- PUZZLE 3: Dativ (Objekt) -->
+    <div class="puzzle-card" id="p3">
+        <div class="card-header">
+            <span>Satz 3</span>
+            <span>Dativ</span>
+        </div>
+        
+        <span class="area-label">Ihr Satz:</span>
+        <div class="word-zone target-zone" id="target-3"></div>
+        
+        <span class="area-label">Wort-Vorrat:</span>
+        <div class="word-zone source-zone" id="source-3"></div>
+
+        <div class="feedback"></div>
+
+        <div class="card-controls">
+            <button class="btn btn-check" onclick="checkPuzzle('p3', ['Это', 'врачи,', 'которым', 'я', 'звоню.'])">Überprüfen</button>
+            <button class="btn btn-reset" onclick="resetPuzzle('p3')">Zurücksetzen</button>
+            <button class="btn btn-solve" onclick="solvePuzzle('p3', ['Это', 'врачи,', 'которым', 'я', 'звоню.'])">Lösung</button>
+        </div>
+    </div>
+
+    <!-- PUZZLE 4: Instrumental (Mit wem?) -->
+    <div class="puzzle-card" id="p4">
+        <div class="card-header">
+            <span>Satz 4</span>
+            <span>Instrumental</span>
+        </div>
+        
+        <span class="area-label">Ihr Satz:</span>
+        <div class="word-zone target-zone" id="target-4"></div>
+        
+        <span class="area-label">Wort-Vorrat:</span>
+        <div class="word-zone source-zone" id="source-4"></div>
+
+        <div class="feedback"></div>
+
+        <div class="card-controls">
+            <button class="btn btn-check" onclick="checkPuzzle('p4', ['Это', 'дети,', 'с', 'которыми', 'мы', 'играем.'])">Überprüfen</button>
+            <button class="btn btn-reset" onclick="resetPuzzle('p4')">Zurücksetzen</button>
+            <button class="btn btn-solve" onclick="solvePuzzle('p4', ['Это', 'дети,', 'с', 'которыми', 'мы', 'играем.'])">Lösung</button>
+        </div>
+    </div>
+
+    <!-- PUZZLE 5: Präpositiv (Über was?) -->
+    <div class="puzzle-card" id="p5">
+        <div class="card-header">
+            <span>Satz 5</span>
+            <span>Präpositiv</span>
+        </div>
+        
+        <span class="area-label">Ihr Satz:</span>
+        <div class="word-zone target-zone" id="target-5"></div>
+        
+        <span class="area-label">Wort-Vorrat:</span>
+        <div class="word-zone source-zone" id="source-5"></div>
+
+        <div class="feedback"></div>
+
+        <div class="card-controls">
+            <button class="btn btn-check" onclick="checkPuzzle('p5', ['Это', 'фильмы,', 'о', 'которых', 'все', 'говорят.'])">Überprüfen</button>
+            <button class="btn btn-reset" onclick="resetPuzzle('p5')">Zurücksetzen</button>
+            <button class="btn btn-solve" onclick="solvePuzzle('p5', ['Это', 'фильмы,', 'о', 'которых', 'все', 'говорят.'])">Lösung</button>
+        </div>
+    </div>
+
+    <!-- PUZZLE 6: Nominativ (Subjekt) -->
+    <div class="puzzle-card" id="p6">
+        <div class="card-header">
+            <span>Satz 6</span>
+            <span>Nominativ</span>
+        </div>
+        
+        <span class="area-label">Ihr Satz:</span>
+        <div class="word-zone target-zone" id="target-6"></div>
+        
+        <span class="area-label">Wort-Vorrat:</span>
+        <div class="word-zone source-zone" id="source-6"></div>
+
+        <div class="feedback"></div>
+
+        <div class="card-controls">
+            <button class="btn btn-check" onclick="checkPuzzle('p6', ['Там', 'студенты,', 'которые', 'читают', 'книги.'])">Überprüfen</button>
+            <button class="btn btn-reset" onclick="resetPuzzle('p6')">Zurücksetzen</button>
+            <button class="btn btn-solve" onclick="solvePuzzle('p6', ['Там', 'студенты,', 'которые', 'читают', 'книги.'])">Lösung</button>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // DATA definition for initialization
+    const puzzleData = {
+        'p1': ['Это', 'друзья,', 'которых', 'мы', 'ждем.'],
+        'p2': ['Вот', 'люди,', 'у', 'которых', 'нет', 'денег.'],
+        'p3': ['Это', 'врачи,', 'которым', 'я', 'звоню.'],
+        'p4': ['Это', 'дети,', 'с', 'которыми', 'мы', 'играем.'],
+        'p5': ['Это', 'фильмы,', 'о', 'которых', 'все', 'говорят.'],
+        'p6': ['Там', 'студенты,', 'которые', 'читают', 'книги.']
+    };
+
+    // Initialize all puzzles on load
+    document.addEventListener("DOMContentLoaded", () => {
+        for (const [id, words] of Object.entries(puzzleData)) {
+            initPuzzle(id, words);
+        }
+    });
+
+    function initPuzzle(cardId, wordsArray) {
+        const source = document.querySelector(`#${cardId} .source-zone`);
+        const target = document.querySelector(`#${cardId} .target-zone`);
+        
+        // Clear existing
+        source.innerHTML = '';
+        target.innerHTML = '';
+
+        // Create a copy and shuffle
+        const shuffled = [...wordsArray].sort(() => Math.random() - 0.5);
+
+        shuffled.forEach(word => {
+            const chip = createChip(word);
+            source.appendChild(chip);
+        });
+    }
+
+    function createChip(text) {
+        const chip = document.createElement('div');
+        chip.className = 'word-chip';
+        chip.textContent = text;
+        chip.onclick = function() { moveChip(this); };
+        return chip;
+    }
+
+    function moveChip(chip) {
+        const card = chip.closest('.puzzle-card');
+        const source = card.querySelector('.source-zone');
+        const target = card.querySelector('.target-zone');
+        const feedback = card.querySelector('.feedback');
+        
+        // Hide feedback when interacting
+        feedback.style.display = 'none';
+        target.classList.remove('correct', 'wrong');
+
+        if (chip.parentElement === source) {
+            target.appendChild(chip);
+        } else {
+            source.appendChild(chip);
+        }
+    }
+
+    function checkPuzzle(cardId, correctOrder) {
+        const card = document.getElementById(cardId);
+        const target = card.querySelector('.target-zone');
+        const feedback = card.querySelector('.feedback');
+        
+        // Get user words
+        const userWords = Array.from(target.children).map(c => c.textContent);
+        
+        // Validate length
+        if (userWords.length !== correctOrder.length) {
+            feedback.textContent = "Der Satz ist noch nicht vollständig.";
+            feedback.className = "feedback error";
+            feedback.style.display = 'block';
+            target.classList.add('wrong');
+            return;
+        }
+
+        // Validate order
+        const isCorrect = userWords.every((val, index) => val === correctOrder[index]);
+
+        if (isCorrect) {
+            feedback.textContent = "Richtig! Perfekte Wortstellung.";
+            feedback.className = "feedback success";
+            target.classList.remove('wrong');
+            target.classList.add('correct');
+        } else {
+            feedback.textContent = "Falsch. Überprüfen Sie die Reihenfolge.";
+            feedback.className = "feedback error";
+            target.classList.remove('correct');
+            target.classList.add('wrong');
+        }
+        feedback.style.display = 'block';
+    }
+
+    function resetPuzzle(cardId) {
+        const card = document.getElementById(cardId);
+        const source = card.querySelector('.source-zone');
+        const target = card.querySelector('.target-zone');
+        const feedback = card.querySelector('.feedback');
+
+        // Move all back to source
+        while(target.firstChild) {
+            source.appendChild(target.firstChild);
+        }
+
+        // Shuffle visually
+        const chips = Array.from(source.children);
+        chips.sort(() => Math.random() - 0.5);
+        chips.forEach(chip => source.appendChild(chip));
+
+        // Clear Styles
+        feedback.style.display = 'none';
+        target.classList.remove('correct', 'wrong');
+    }
+
+    function solvePuzzle(cardId, correctOrder) {
+        const card = document.getElementById(cardId);
+        const source = card.querySelector('.source-zone');
+        const target = card.querySelector('.target-zone');
+        const feedback = card.querySelector('.feedback');
+
+        // Move everything to source first to find them
+        while(target.firstChild) {
+            source.appendChild(target.firstChild);
+        }
+
+        // Find and append in order
+        correctOrder.forEach(wordText => {
+            const chips = Array.from(source.children);
+            const chip = chips.find(c => c.textContent === wordText);
+            if(chip) target.appendChild(chip);
+        });
+
+        feedback.textContent = "Lösung angezeigt.";
+        feedback.className = "feedback success";
+        feedback.style.display = 'block';
+        target.classList.add('correct');
+        target.classList.remove('wrong');
+    }
+
+</script>
+
+</body>
+</html>
