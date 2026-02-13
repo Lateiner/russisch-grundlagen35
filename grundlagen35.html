@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russische Grammatik: КОТОРЫЕ (Plural)</title>
+    <!-- Polyfill für Drag & Drop auf Touch-Geräten -->
+    <script src="https://cdn.jsdelivr.net/npm/drag-drop-touch@1.3.1/DragDropTouch.js"></script>
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --success-color: #2ecc71;
+            --error-color: #e74c3c;
+            --bg-color: #f4f7f6;
+            --card-bg: #ffffff;
+            --text-color: #333;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            color: #2c3e50;
+        }
+
+        .intro-box {
+            background-color: #e8f6f3;
+            border-left: 5px solid var(--primary-color);
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 4px;
+        }
+
+        .intro-box h2 {
+            margin-top: 0;
+        }
+
+        .rule-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            background: white;
+        }
+
+        .rule-table th, .rule-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        .rule-table th {
+            background-color: #f2f2f2;
+        }
+
+        .task-card {
+            background-color: var(--card-bg);
+            padding: 20px;
+            margin-bottom: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .task-header {
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #555;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+
+        .question {
+            font-size: 1.1em;
+            margin-bottom: 15px;
+        }
+
+        /* Controls */
+        select {
+            padding: 8px;
+            font-size: 1em;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            margin: 0 5px;
+            background-color: #fff;
+        }
+
+        .options-container {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+
+        label {
+            cursor: pointer;
+            padding: 5px 10px;
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        label:hover {
+            background: #eef;
+        }
+
+        input[type="radio"] {
+            margin-right: 5px;
+        }
+
+        /* Drag and Drop Styles */
+        .drag-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .draggables {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            padding: 10px;
+            background: #eee;
+            border-radius: 5px;
+            min-height: 40px;
+        }
+
+        .draggable {
+            background: white;
+            padding: 5px 15px;
+            border: 1px solid #999;
+            border-radius: 4px;
+            cursor: grab;
+            user-select: none;
+        }
+
+        .dropzone {
+            display: inline-block;
+            min-width: 100px;
+            min-height: 30px;
+            border-bottom: 2px dashed #999;
+            background: #fafafa;
+            vertical-align: middle;
+            text-align: center;
+            margin: 0 5px;
+        }
+
+        /* Buttons */
+        .btn-group {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background 0.3s;
+        }
+
+        .btn-check {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        .btn-check:hover { background-color: #2980b9; }
+
+        .btn-reset {
+            background-color: #95a5a6;
+            color: white;
+        }
+        .btn-reset:hover { background-color: #7f8c8d; }
+
+        .btn-solve {
+            background-color: #f39c12;
+            color: white;
+        }
+        .btn-solve:hover { background-color: #d35400; }
+
+        /* Feedback Styles */
+        .feedback-msg {
+            margin-top: 10px;
+            font-weight: bold;
+            display: none;
+        }
+
+        .correct {
+            border-color: var(--success-color) !important;
+            background-color: #e8f8f5 !important;
+            color: #155724;
+        }
+
+        .incorrect {
+            border-color: var(--error-color) !important;
+            background-color: #fceae9 !important;
+            color: #721c24;
+        }
+
+        .dropzone.correct {
+            border-bottom: 2px solid var(--success-color);
+        }
+
+        .dropzone.incorrect {
+            border-bottom: 2px solid var(--error-color);
+        }
+
+        @media (max-width: 600px) {
+            .btn-group {
+                flex-direction: column;
+            }
+            button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Russische Grammatik: Relativsätze</h1>
+        <p>Verwendung von КОТОРЫЕ (Plural)</p>
+    </header>
+
+    <div class="intro-box">
+        <h2>Einführung: Verwendung von КОТОРЫЕ</h2>
+        <p>Das Relativpronomen <strong>КОТОРЫЕ</strong> wird verwendet, wenn wir uns auf ein Substantiv im Plural beziehen. Die Endung ändert sich je nach <strong>Fall im Nebensatz</strong>.</p>
+        
+        <table class="rule-table">
+            <thead>
+                <tr>
+                    <th>Fall</th>
+                    <th>Frage / Funktion</th>
+                    <th>Endung (Form)</th>
+                    <th>Beispiel</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Nominativ (1)</td>
+                    <td>Subjekt (Wer/Was?)</td>
+                    <td><strong>КОТОРЫЕ</strong></td>
+                    <td>Студенты, <strong>которые</strong> читают.</td>
+                </tr>
+                <tr>
+                    <td>Genitiv (2)</td>
+                    <td>Besitz/Verneinung (Wessen?)</td>
+                    <td><strong>КОТОРЫХ</strong></td>
+                    <td>Люди, у <strong>которых</strong> нет времени.</td>
+                </tr>
+                <tr>
+                    <td>Dativ (3)</td>
+                    <td>Ziel (Wem?)</td>
+                    <td><strong>КОТОРЫМ</strong></td>
+                    <td>Друзья, <strong>которым</strong> я звоню.</td>
+                </tr>
+                <tr>
+                    <td>Akkusativ (4)</td>
+                    <td>Objekt (Wen/Was?)</td>
+                    <td><strong>КОТОРЫЕ</strong> (Unbelebt)<br><strong>КОТОРЫХ</strong> (Belebt)</td>
+                    <td>Книги, <strong>которые</strong> я вижу.<br>Люди, <strong>которых</strong> я вижу.</td>
+                </tr>
+                <tr>
+                    <td>Instrumental (5)</td>
+                    <td>Womit/Mit wem?</td>
+                    <td><strong>КОТОРЫМИ</strong></td>
+                    <td>Дети, с <strong>которыми</strong> я играю.</td>
+                </tr>
+                <tr>
+                    <td>Präpositiv (6)</td>
+                    <td>Worüber/Wo?</td>
+                    <td><strong>КОТОРЫХ</strong></td>
+                    <td>Фильмы, о <strong>которых</strong> мы говорим.</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Aufgabe 1: Dropdown (Nominativ) -->
+    <div class="task-card" id="task1">
+        <div class="task-header">Aufgabe 1: Nominativ (Subjekt)</div>
+        <p>Wählen Sie die richtige Form. Das Bezugswort ist „Туристы“.</p>
+        <div class="question">
+            Это туристы, <select data-correct="которые">
+                <option value="">---</option>
+                <option value="которые">которые</option>
+                <option value="которых">которых</option>
+                <option value="которым">которым</option>
+            </select> гуляют в центре.
+        </div>
+        <div class="feedback-msg"></div>
+        <div class="btn-group">
+            <button class="btn-check" onclick="checkSelect('task1')">Überprüfen</button>
+            <button class="btn-reset" onclick="resetSelect('task1')">Zurücksetzen</button>
+            <button class="btn-solve" onclick="solveSelect('task1')">Lösung anzeigen</button>
+        </div>
+    </div>
+
+    <!-- Aufgabe 2: Dropdown (Genitiv) -->
+    <div class="task-card" id="task2">
+        <div class="task-header">Aufgabe 2: Genitiv (Verneinung)</div>
+        <p>Wählen Sie die richtige Form. Das Bezugswort ist „Книги“.</p>
+        <div class="question">
+            Вот книги, <select data-correct="которых">
+                <option value="">---</option>
+                <option value="которые">которые</option>
+                <option value="которых">которых</option>
+                <option value="которыми">которыми</option>
+            </select> здесь раньше не было.
+        </div>
+        <div class="feedback-msg"></div>
+        <div class="btn-group">
+            <button class="btn-check" onclick="checkSelect('task2')">Überprüfen</button>
+            <button class="btn-reset" onclick="resetSelect('task2')">Zurücksetzen</button>
+            <button class="btn-solve" onclick="solveSelect('task2')">Lösung anzeigen</button>
+        </div>
+    </div>
+
+    <!-- Aufgabe 3: Dropdown (Dativ) -->
+    <div class="task-card" id="task3">
+        <div class="task-header">Aufgabe 3: Dativ (Indirektes Objekt)</div>
+        <p>Wählen Sie die richtige Form. Das Bezugswort ist „Люди“.</p>
+        <div class="question">
+            Это люди, <select data-correct="которым">
+                <option value="">---</option>
+                <option value="которых">которых</option>
+                <option value="которым">которым</option>
+                <option value="которыми">которыми</option>
+            </select> я помогаю.
+        </div>
+        <div class="feedback-msg"></div>
+        <div class="btn-group">
+            <button class="btn-check" onclick="checkSelect('task3')">Überprüfen</button>
+            <button class="btn-reset" onclick="resetSelect('task3')">Zurücksetzen</button>
+            <button class="btn-solve" onclick="solveSelect('task3')">Lösung anzeigen</button>
+        </div>
+    </div>
+
+    <!-- Aufgabe 4: Radio (Akkusativ Unbelebt) -->
+    <div class="task-card" id="task4">
+        <div class="task-header">Aufgabe 4: Akkusativ (Unbelebt - Gegenstände)</div>
+        <p>Welche Form ist richtig? Bezugswort: „Песни“ (Lieder - unbelebt).</p>
+        <div class="question">
+            Я люблю песни, ... мы слушали вчера.
+        </div>
+        <div class="options-container">
+            <label><input type="radio" name="t4" value="которые" data-correct="true"> которые</label>
+            <label><input type="radio" name="t4" value="которых"> которых</label>
+            <label><input type="radio" name="t4" value="которым"> которым</label>
+        </div>
+        <div class="feedback-msg"></div>
+        <div class="btn-group">
+            <button class="btn-check" onclick="checkRadio('task4')">Überprüfen</button>
+            <button class="btn-reset" onclick="resetRadio('task4')">Zurücksetzen</button>
+            <button class="btn-solve" onclick="solveRadio('task4', 'которые')">Lösung anzeigen</button>
+        </div>
+    </div>
+
+    <!-- Aufgabe 5: Radio (Akkusativ Belebt) -->
+    <div class="task-card" id="task5">
+        <div class="task-header">Aufgabe 5: Akkusativ (Belebt - Menschen/Tiere)</div>
+        <p>Welche Form ist richtig? Bezugswort: „Девушки“ (Junge Frauen - belebt).</p>
+        <div class="question">
+            Это девушки, ... я знаю.
+        </div>
+        <div class="options-container">
+            <label><input type="radio" name="t5" value="которые"> которые</label>
+            <label><input type="radio" name="t5" value="которых" data-correct="true"> которых</label>
+            <label><input type="radio" name="t5" value="которыми"> которыми</label>
+        </div>
+        <div class="feedback-msg"></div>
+        <div class="btn-group">
+            <button class="btn-check" onclick="checkRadio('task5')">Überprüfen</button>
+            <button class="btn-reset" onclick="resetRadio('task5')">Zurücksetzen</button>
+            <button class="btn-solve" onclick="solveRadio('task5', 'которых')">Lösung anzeigen</button>
+        </div>
+    </div>
+
+    <!-- Aufgabe 6: Dropdown (Instrumental) -->
+    <div class="task-card" id="task6">
+        <div class="task-header">Aufgabe 6: Instrumental (Womit?)</div>
+        <p>Wählen Sie die richtige Form. Bezugswort: „Инструменты“.</p>
+        <div class="question">
+            Вот инструменты, <select data-correct="которыми">
+                <option value="">---</option>
+                <option value="которые">которые</option>
+                <option value="которых">которых</option>
+                <option value="которыми">которыми</option>
+            </select> мы работаем.
+        </div>
+        <div class="feedback-msg"></div>
+        <div class="btn-group">
+            <button class="btn-check" onclick="checkSelect('task6')">Überprüfen</button>
+            <button class="btn-reset" onclick="resetSelect('task6')">Zurücksetzen</button>
+            <button class="btn-solve" onclick="solveSelect('task6')">Lösung anzeigen</button>
+        </div>
+    </div>
+
+    <!-- Aufgabe 7: Dropdown (Präpositiv) -->
+    <div class="task-card" id="task7">
+        <div class="task-header">Aufgabe 7: Präpositiv (Worüber?)</div>
+        <p>Wählen Sie die richtige Form inklusive Präposition. Bezugswort: „Проблемы“.</p>
+        <div class="question">
+            Это проблемы, <select data-correct="о которых">
+                <option value="">---</option>
+                <option value="о которых">о которых</option>
+                <option value="о которые">о которые</option>
+                <option value="о которыми">о которыми</option>
+            </select> все говорят.
+        </div>
+        <div class="feedback-msg"></div>
+        <div class="btn-group">
+            <button class="btn-check" onclick="checkSelect('task7')">Überprüfen</button>
+            <button class="btn-reset" onclick="resetSelect('task7')">Zurücksetzen</button>
+            <button class="btn-solve" onclick="solveSelect('task7')">Lösung anzeigen</button>
+        </div>
+    </div>
+
+    <!-- Aufgabe 8: Drag & Drop (Instrumental mit Präposition) -->
+    <div class="task-card" id="task8">
+        <div class="task-header">Aufgabe 8: Instrumental + Präposition „с“</div>
+        <p>Ziehen Sie das richtige Wort in die Lücke. „Das sind Studenten, mit denen wir lernen.“</p>
+        
+        <div class="drag-container">
+            <div class="question">
+                Это студенты, <span class="dropzone" data-correct="с которыми"></span> мы учимся.
+            </div>
+            <div class="draggables" id="drag-src-8">
+                <span class="draggable" draggable="true" ondragstart="drag(event)" id="d8-1">с которыми</span>
+                <span class="draggable" draggable="true" ondragstart="drag(event)" id="d8-2">с которых</span>
+                <span class="draggable" draggable="true" ondragstart="drag(event)" id="d8-3">которыми</span>
+            </div>
+        </div>
+
+        <div class="feedback-msg"></div>
+        <div class="btn-group">
+            <button class="btn-check" onclick="checkDrag('task8')">Überprüfen</button>
+            <button class="btn-reset" onclick="resetDrag('task8', 'drag-src-8')">Zurücksetzen</button>
+            <button class="btn-solve" onclick="solveDrag('task8', 'с которыми')">Lösung anzeigen</button>
+        </div>
+    </div>
+
+    <!-- Aufgabe 9: Drag & Drop (Genitiv mit Präposition) -->
+    <div class="task-card" id="task9">
+        <div class="task-header">Aufgabe 9: Genitiv + Präposition „у“</div>
+        <p>Ziehen Sie das richtige Wort in die Lücke. „Das sind Kollegen, die Autos haben.“ (wörtlich: bei denen es Autos gibt)</p>
+        
+        <div class="drag-container">
+            <div class="question">
+                Это коллеги, <span class="dropzone" data-correct="у которых"></span> есть машины.
+            </div>
+            <div class="draggables" id="drag-src-9">
+                <span class="draggable" draggable="true" ondragstart="drag(event)" id="d9-1">у которые</span>
+                <span class="draggable" draggable="true" ondragstart="drag(event)" id="d9-2">у которых</span>
+                <span class="draggable" draggable="true" ondragstart="drag(event)" id="d9-3">которых</span>
+            </div>
+        </div>
+
+        <div class="feedback-msg"></div>
+        <div class="btn-group">
+            <button class="btn-check" onclick="checkDrag('task9')">Überprüfen</button>
+            <button class="btn-reset" onclick="resetDrag('task9', 'drag-src-9')">Zurücksetzen</button>
+            <button class="btn-solve" onclick="solveDrag('task9', 'у которых')">Lösung anzeigen</button>
+        </div>
+    </div>
+
+    <!-- Aufgabe 10: Drag & Drop (Präpositiv mit Präposition "в") -->
+    <div class="task-card" id="task10">
+        <div class="task-header">Aufgabe 10: Präpositiv + Präposition „в“</div>
+        <p>Ziehen Sie das richtige Wort in die Lücke. „Das sind Häuser, in denen Menschen leben.“</p>
+        
+        <div class="drag-container">
+            <div class="question">
+                Это дома, <span class="dropzone" data-correct="в которых"></span> живут люди.
+            </div>
+            <div class="draggables" id="drag-src-10">
+                <span class="draggable" draggable="true" ondragstart="drag(event)" id="d10-1">в которые</span>
+                <span class="draggable" draggable="true" ondragstart="drag(event)" id="d10-2">в которых</span>
+                <span class="draggable" draggable="true" ondragstart="drag(event)" id="d10-3">которых</span>
+            </div>
+        </div>
+
+        <div class="feedback-msg"></div>
+        <div class="btn-group">
+            <button class="btn-check" onclick="checkDrag('task10')">Überprüfen</button>
+            <button class="btn-reset" onclick="resetDrag('task10', 'drag-src-10')">Zurücksetzen</button>
+            <button class="btn-solve" onclick="solveDrag('task10', 'в которых')">Lösung anzeigen</button>
+        </div>
+    </div>
+
+    <!-- Aufgabe 11: Radio (Dativ mit Präposition "к") -->
+    <div class="task-card" id="task11">
+        <div class="task-header">Aufgabe 11: Dativ + Präposition „к“</div>
+        <p>Welche Form ist richtig? „Die Ärzte, zu denen wir gingen.“</p>
+        <div class="question">
+            Врачи, ... мы ходили.
+        </div>
+        <div class="options-container">
+            <label><input type="radio" name="t11" value="к которым" data-correct="true"> к которым</label>
+            <label><input type="radio" name="t11" value="к которых"> к которых</label>
+            <label><input type="radio" name="t11" value="которым"> которым</label>
+        </div>
+        <div class="feedback-msg"></div>
+        <div class="btn-group">
+            <button class="btn-check" onclick="checkRadio('task11')">Überprüfen</button>
+            <button class="btn-reset" onclick="resetRadio('task11')">Zurücksetzen</button>
+            <button class="btn-solve" onclick="solveRadio('task11', 'к которым')">Lösung anzeigen</button>
+        </div>
+    </div>
+
+    <!-- Aufgabe 12: Dropdown (Gemischt/Belebt Akkusativ) -->
+    <div class="task-card" id="task12">
+        <div class="task-header">Aufgabe 12: Akkusativ (Belebt)</div>
+        <p>Wählen Sie die richtige Form. Bezugswort: „Кошки“ (Katzen - belebt).</p>
+        <div class="question">
+            Кошки, <select data-correct="которых">
+                <option value="">---</option>
+                <option value="которые">которые</option>
+                <option value="которых">которых</option>
+                <option value="которым">которым</option>
+            </select> мы кормим (füttern).
+        </div>
+        <div class="feedback-msg"></div>
+        <div class="btn-group">
+            <button class="btn-check" onclick="checkSelect('task12')">Überprüfen</button>
+            <button class="btn-reset" onclick="resetSelect('task12')">Zurücksetzen</button>
+            <button class="btn-solve" onclick="solveSelect('task12')">Lösung anzeigen</button>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // --- Logic for Select/Dropdown Tasks ---
+    function checkSelect(taskId) {
+        const container = document.getElementById(taskId);
+        const select = container.querySelector('select');
+        const feedback = container.querySelector('.feedback-msg');
+        
+        select.classList.remove('correct', 'incorrect');
+        
+        if (select.value === select.getAttribute('data-correct')) {
+            select.classList.add('correct');
+            feedback.textContent = "Richtig! ✓";
+            feedback.className = "feedback-msg correct";
+        } else {
+            select.classList.add('incorrect');
+            feedback.textContent = "Leider falsch. Versuchen Sie es noch einmal.";
+            feedback.className = "feedback-msg incorrect";
+        }
+        feedback.style.display = 'block';
+    }
+
+    function resetSelect(taskId) {
+        const container = document.getElementById(taskId);
+        const select = container.querySelector('select');
+        const feedback = container.querySelector('.feedback-msg');
+        
+        select.value = "";
+        select.classList.remove('correct', 'incorrect');
+        feedback.style.display = 'none';
+    }
+
+    function solveSelect(taskId) {
+        const container = document.getElementById(taskId);
+        const select = container.querySelector('select');
+        const feedback = container.querySelector('.feedback-msg');
+        
+        select.value = select.getAttribute('data-correct');
+        select.classList.remove('incorrect');
+        select.classList.add('correct');
+        feedback.textContent = "Lösung angezeigt.";
+        feedback.className = "feedback-msg";
+        feedback.style.display = 'block';
+    }
+
+    // --- Logic for Radio Button Tasks ---
+    function checkRadio(taskId) {
+        const container = document.getElementById(taskId);
+        const radios = container.querySelectorAll('input[type="radio"]');
+        const feedback = container.querySelector('.feedback-msg');
+        let selected = null;
+        let label = null;
+
+        // Reset styling
+        container.querySelectorAll('label').forEach(l => {
+            l.style.backgroundColor = '#f9f9f9';
+            l.style.borderColor = '#ddd';
+        });
+
+        radios.forEach(radio => {
+            if (radio.checked) {
+                selected = radio;
+                label = radio.parentElement;
+            }
+        });
+
+        if (!selected) {
+            feedback.textContent = "Bitte wählen Sie eine Antwort aus.";
+            feedback.className = "feedback-msg";
+            feedback.style.display = 'block';
+            return;
+        }
+
+        if (selected.getAttribute('data-correct') === 'true') {
+            label.style.backgroundColor = '#e8f8f5';
+            label.style.borderColor = '#2ecc71';
+            feedback.textContent = "Richtig! ✓";
+            feedback.className = "feedback-msg correct";
+        } else {
+            label.style.backgroundColor = '#fceae9';
+            label.style.borderColor = '#e74c3c';
+            feedback.textContent = "Falsch. Versuchen Sie es noch einmal.";
+            feedback.className = "feedback-msg incorrect";
+        }
+        feedback.style.display = 'block';
+    }
+
+    function resetRadio(taskId) {
+        const container = document.getElementById(taskId);
+        const radios = container.querySelectorAll('input[type="radio"]');
+        const feedback = container.querySelector('.feedback-msg');
+
+        radios.forEach(radio => radio.checked = false);
+        container.querySelectorAll('label').forEach(l => {
+            l.style.backgroundColor = '#f9f9f9';
+            l.style.borderColor = '#ddd';
+        });
+        feedback.style.display = 'none';
+    }
+
+    function solveRadio(taskId, correctValue) {
+        const container = document.getElementById(taskId);
+        const radios = container.querySelectorAll('input[type="radio"]');
+        
+        resetRadio(taskId); // Clean visual state first
+
+        radios.forEach(radio => {
+            if (radio.value === correctValue) {
+                radio.checked = true;
+                // Manually trigger correct styling
+                radio.parentElement.style.backgroundColor = '#e8f8f5';
+                radio.parentElement.style.borderColor = '#2ecc71';
+            }
+        });
+    }
+
+    // --- Logic for Drag and Drop ---
+    function allowDrop(ev) {
+        ev.preventDefault();
+    }
+
+    function drag(ev) {
+        ev.dataTransfer.setData("text", ev.target.id);
+    }
+
+    // Setup Dropzones
+    document.querySelectorAll('.dropzone').forEach(zone => {
+        zone.addEventListener('dragover', allowDrop);
+        zone.addEventListener('drop', function(ev) {
+            ev.preventDefault();
+            // Nur droppen, wenn Zone leer ist oder wir ersetzen wollen (hier einfach: nur wenn leer)
+            if (this.childNodes.length > 0) {
+                return; 
+            }
+            var data = ev.dataTransfer.getData("text");
+            var draggedElement = document.getElementById(data);
+            if(draggedElement) {
+                this.appendChild(draggedElement);
+                // Style Reset für das gezogene Element
+                draggedElement.style.border = "none";
+                draggedElement.style.background = "transparent";
+            }
+        });
+        
+        // Touch Support via DragDropTouch.js polyfill handled automatically, 
+        // but ensuring click-to-move fallback is often nice. 
+        // For simplicity in this file, we rely on the polyfill for touch.
+    });
+
+    function checkDrag(taskId) {
+        const container = document.getElementById(taskId);
+        const dropzone = container.querySelector('.dropzone');
+        const feedback = container.querySelector('.feedback-msg');
+        
+        dropzone.classList.remove('correct', 'incorrect');
+        
+        if (dropzone.children.length === 0) {
+            feedback.textContent = "Bitte ziehen Sie ein Wort in die Lücke.";
+            feedback.className = "feedback-msg";
+            feedback.style.display = 'block';
+            return;
+        }
+
+        const answer = dropzone.children[0].textContent; // oder innerText
+        
+        if (answer === dropzone.getAttribute('data-correct')) {
+            dropzone.classList.add('correct');
+            feedback.textContent = "Richtig! ✓";
+            feedback.className = "feedback-msg correct";
+        } else {
+            dropzone.classList.add('incorrect');
+            feedback.textContent = "Falsch. Versuchen Sie es noch einmal.";
+            feedback.className = "feedback-msg incorrect";
+        }
+        feedback.style.display = 'block';
+    }
+
+    function resetDrag(taskId, sourceId) {
+        const container = document.getElementById(taskId);
+        const dropzone = container.querySelector('.dropzone');
+        const sourceContainer = document.getElementById(sourceId);
+        const feedback = container.querySelector('.feedback-msg');
+
+        // Move all items back to source
+        if(dropzone.children.length > 0) {
+            const item = dropzone.children[0];
+            // Reset styles
+            item.style.border = "1px solid #999";
+            item.style.background = "white";
+            sourceContainer.appendChild(item);
+        }
+
+        dropzone.classList.remove('correct', 'incorrect');
+        feedback.style.display = 'none';
+    }
+
+    function solveDrag(taskId, correctText) {
+        const container = document.getElementById(taskId);
+        const dropzone = container.querySelector('.dropzone');
+        const draggables = container.querySelectorAll('.draggable');
+        
+        // Erst resetten, um Platz zu machen
+        const sourceId = container.querySelector('.draggables').id;
+        resetDrag(taskId, sourceId);
+
+        let correctElement = null;
+        draggables.forEach(el => {
+            if (el.textContent === correctText) correctElement = el;
+        });
+
+        if (correctElement) {
+            dropzone.appendChild(correctElement);
+            correctElement.style.border = "none";
+            correctElement.style.background = "transparent";
+            dropzone.classList.add('correct');
+        }
+    }
+</script>
+
+</body>
+</html>
