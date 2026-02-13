@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Satz-Transformation: КОТОРЫЕ (8 Aufgaben)</title>
+    <!-- Polyfill für Touch Drag & Drop -->
+    <script src="https://cdn.jsdelivr.net/npm/drag-drop-touch@1.3.1/DragDropTouch.js"></script>
+    <style>
+        :root {
+            --primary: #3498db;
+            --secondary: #2c3e50;
+            --accent: #f39c12;
+            --success: #27ae60;
+            --error: #c0392b;
+            --bg: #f4f6f8;
+            --surface: #ffffff;
+            --shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--secondary);
+            margin: 0;
+            padding: 10px;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding-bottom: 50px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            background: var(--surface);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+        }
+
+        h1 { margin: 0 0 10px 0; color: var(--primary); font-size: 1.5rem; }
+        p { margin: 0; color: #666; }
+
+        .intro-box {
+            background-color: #eaf2f8;
+            border-left: 5px solid var(--primary);
+            padding: 15px;
+            margin-bottom: 25px;
+            border-radius: 4px;
+            font-size: 0.95rem;
+        }
+
+        /* Task Card Styling */
+        .task-card {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: var(--shadow);
+            border: 1px solid #e1e8ed;
+        }
+
+        .task-title {
+            font-weight: bold;
+            color: #7f8c8d;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            margin-bottom: 15px;
+            letter-spacing: 1px;
+        }
+
+        /* Transformation Visualizer */
+        .transformation-box {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            border: 1px dashed #cbd5e0;
+        }
+
+        .sentence-part {
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .label {
+            background: var(--secondary);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            min-width: 25px;
+            text-align: center;
+        }
+
+        .arrow-down {
+            text-align: center;
+            color: var(--primary);
+            font-size: 1.2rem;
+            margin: 5px 0;
+        }
+
+        /* Interaction Area */
+        .sentence-builder {
+            margin-top: 10px;
+        }
+
+        .static-start {
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            display: inline-block;
+        }
+
+        .dropzone {
+            min-height: 50px;
+            background-color: #fff;
+            border: 2px solid #dfe6e9;
+            border-radius: 8px;
+            padding: 8px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+            margin-bottom: 15px;
+            transition: border-color 0.3s, background-color 0.3s;
+        }
+
+        .dropzone.active {
+            border-color: var(--primary);
+            background-color: #ebf5fb;
+        }
+
+        .dropzone.correct {
+            border-color: var(--success);
+            background-color: #e8f8f5;
+        }
+
+        .dropzone.incorrect {
+            border-color: var(--error);
+            background-color: #fceae9;
+        }
+
+        .word-pool {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            min-height: 40px;
+            padding: 10px;
+            background: #f1f2f6;
+            border-radius: 8px;
+        }
+
+        /* Word Chips */
+        .word {
+            background: white;
+            border: 1px solid #bdc3c7;
+            border-bottom: 2px solid #bdc3c7;
+            padding: 8px 14px;
+            border-radius: 20px;
+            cursor: pointer;
+            user-select: none;
+            font-size: 1rem;
+            transition: transform 0.1s, background 0.2s;
+            touch-action: manipulation;
+        }
+
+        .word:active {
+            transform: translateY(2px);
+            border-bottom-width: 1px;
+        }
+
+        .word:hover {
+            background-color: #f7f9fa;
+        }
+
+        /* Feedback & Buttons */
+        .feedback {
+            margin-top: 15px;
+            font-weight: bold;
+            min-height: 24px;
+            font-size: 0.95rem;
+        }
+
+        .feedback.success { color: var(--success); }
+        .feedback.error { color: var(--error); }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: opacity 0.2s;
+            min-width: 120px;
+        }
+
+        button:active { opacity: 0.8; }
+
+        .btn-check { background-color: var(--primary); color: white; }
+        .btn-reset { background-color: #95a5a6; color: white; }
+        .btn-solve { background-color: var(--accent); color: white; }
+
+        @media (max-width: 600px) {
+            h1 { font-size: 1.3rem; }
+            .transformation-box { font-size: 0.9rem; }
+            .word { padding: 6px 12px; font-size: 0.95rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Satz-Transformation</h1>
+        <p>Russische Relativsätze (КОТОРЫЕ)</p>
+    </header>
+
+    <div class="intro-box">
+        <strong>Anleitung:</strong> Verbinden Sie die beiden Sätze A und B zu einem einzigen Satz.
+        <br>1. Klicken Sie auf die Wörter, um sie in die Lücke zu schieben.
+        <br>2. Bilden Sie den vollständigen Relativsatz.
+        <br>3. Sie benötigen keine Tastatur.
+    </div>
+
+    <!-- ÜBUNG 1: Dativ (Objekt) -->
+    <div class="task-card" id="task1">
+        <div class="task-title">Aufgabe 1: Dativ (Objekt)</div>
+        <div class="transformation-box">
+            <div class="sentence-part"><span class="label">A</span><span>Это студенты. (Das sind Studenten.)</span></div>
+            <div class="sentence-part"><span class="label">B</span><span>Мы помогаем студентам. (Wir helfen den Studenten.)</span></div>
+            <div class="arrow-down">⬇</div>
+            <div><em>Ziel: Das sind Studenten, denen wir helfen.</em></div>
+        </div>
+        <div class="sentence-builder">
+            <span class="static-start">Это студенты, </span>
+            <div class="dropzone" data-correct="которым мы помогаем"></div>
+            <div class="word-pool">
+                <span class="word" onclick="moveWord(this)">мы</span>
+                <span class="word" onclick="moveWord(this)">помогаем</span>
+                <span class="word" onclick="moveWord(this)">которым</span>
+                <span class="word" onclick="moveWord(this)">которые</span>
+            </div>
+        </div>
+        <div class="feedback"></div>
+        <div class="controls">
+            <button class="btn-check" onclick="checkTask('task1')">Überprüfen</button>
+            <button class="btn-reset" onclick="resetTask('task1')">Zurücksetzen</button>
+            <button class="btn-solve" onclick="solveTask('task1', ['которым', 'мы', 'помогаем'])">Lösung</button>
+        </div>
+    </div>
+
+    <!-- ÜBUNG 2: Genitiv (Verneinung) -->
+    <div class="task-card" id="task2">
+        <div class="task-title">Aufgabe 2: Genitiv (Verneinung)</div>
+        <div class="transformation-box">
+            <div class="sentence-part"><span class="label">A</span><span>Вот книги. (Hier sind Bücher.)</span></div>
+            <div class="sentence-part"><span class="label">B</span><span>Этих книг здесь не было. (Diese Bücher waren nicht hier.)</span></div>
+            <div class="arrow-down">⬇</div>
+            <div><em>Ziel: Hier sind Bücher, die hier nicht waren.</em></div>
+        </div>
+        <div class="sentence-builder">
+            <span class="static-start">Вот книги, </span>
+            <div class="dropzone" data-correct="которых здесь не было"></div>
+            <div class="word-pool">
+                <span class="word" onclick="moveWord(this)">здесь</span>
+                <span class="word" onclick="moveWord(this)">не</span>
+                <span class="word" onclick="moveWord(this)">было</span>
+                <span class="word" onclick="moveWord(this)">которых</span>
+                <span class="word" onclick="moveWord(this)">которые</span>
+            </div>
+        </div>
+        <div class="feedback"></div>
+        <div class="controls">
+            <button class="btn-check" onclick="checkTask('task2')">Überprüfen</button>
+            <button class="btn-reset" onclick="resetTask('task2')">Zurücksetzen</button>
+            <button class="btn-solve" onclick="solveTask('task2', ['которых', 'здесь', 'не', 'было'])">Lösung</button>
+        </div>
+    </div>
+
+    <!-- ÜBUNG 3: Akkusativ (Belebt) -->
+    <div class="task-card" id="task3">
+        <div class="task-title">Aufgabe 3: Akkusativ (Belebt)</div>
+        <div class="transformation-box">
+            <div class="sentence-part"><span class="label">A</span><span>Это друзья. (Das sind Freunde.)</span></div>
+            <div class="sentence-part"><span class="label">B</span><span>Я знаю друзей. (Ich kenne die Freunde.)</span></div>
+            <div class="arrow-down">⬇</div>
+            <div><em>Ziel: Das sind Freunde, die ich kenne.</em></div>
+        </div>
+        <div class="sentence-builder">
+            <span class="static-start">Это друзья, </span>
+            <div class="dropzone" data-correct="которых я знаю"></div>
+            <div class="word-pool">
+                <span class="word" onclick="moveWord(this)">я</span>
+                <span class="word" onclick="moveWord(this)">знаю</span>
+                <span class="word" onclick="moveWord(this)">которых</span>
+                <span class="word" onclick="moveWord(this)">которые</span>
+            </div>
+        </div>
+        <div class="feedback"></div>
+        <div class="controls">
+            <button class="btn-check" onclick="checkTask('task3')">Überprüfen</button>
+            <button class="btn-reset" onclick="resetTask('task3')">Zurücksetzen</button>
+            <button class="btn-solve" onclick="solveTask('task3', ['которых', 'я', 'знаю'])">Lösung</button>
+        </div>
+    </div>
+
+    <!-- ÜBUNG 4: Instrumental + Präposition -->
+    <div class="task-card" id="task4">
+        <div class="task-title">Aufgabe 4: Instrumental (Mit wem?)</div>
+        <div class="transformation-box">
+            <div class="sentence-part"><span class="label">A</span><span>Это люди. (Das sind Leute.)</span></div>
+            <div class="sentence-part"><span class="label">B</span><span>Мы разговаривали с людьми. (Wir haben mit den Leuten gesprochen.)</span></div>
+            <div class="arrow-down">⬇</div>
+            <div><em>Ziel: Das sind Leute, mit denen wir gesprochen haben.</em></div>
+        </div>
+        <div class="sentence-builder">
+            <span class="static-start">Это люди, </span>
+            <div class="dropzone" data-correct="с которыми мы разговаривали"></div>
+            <div class="word-pool">
+                <span class="word" onclick="moveWord(this)">мы</span>
+                <span class="word" onclick="moveWord(this)">разговаривали</span>
+                <span class="word" onclick="moveWord(this)">которыми</span>
+                <span class="word" onclick="moveWord(this)">с</span>
+                <span class="word" onclick="moveWord(this)">которых</span>
+            </div>
+        </div>
+        <div class="feedback"></div>
+        <div class="controls">
+            <button class="btn-check" onclick="checkTask('task4')">Überprüfen</button>
+            <button class="btn-reset" onclick="resetTask('task4')">Zurücksetzen</button>
+            <button class="btn-solve" onclick="solveTask('task4', ['с', 'которыми', 'мы', 'разговаривали'])">Lösung</button>
+        </div>
+    </div>
+
+    <!-- ÜBUNG 5: Akkusativ (Unbelebt) -->
+    <div class="task-card" id="task5">
+        <div class="task-title">Aufgabe 5: Akkusativ (Unbelebt)</div>
+        <div class="transformation-box">
+            <div class="sentence-part"><span class="label">A</span><span>Вот фильмы. (Hier sind Filme.)</span></div>
+            <div class="sentence-part"><span class="label">B</span><span>Мы смотрели фильмы вчера. (Wir haben die Filme gestern geschaut.)</span></div>
+            <div class="arrow-down">⬇</div>
+            <div><em>Ziel: Hier sind Filme, die wir gestern geschaut haben.</em></div>
+        </div>
+        <div class="sentence-builder">
+            <span class="static-start">Вот фильмы, </span>
+            <div class="dropzone" data-correct="которые мы смотрели вчера"></div>
+            <div class="word-pool">
+                <span class="word" onclick="moveWord(this)">мы</span>
+                <span class="word" onclick="moveWord(this)">смотрели</span>
+                <span class="word" onclick="moveWord(this)">вчера</span>
+                <span class="word" onclick="moveWord(this)">которые</span>
+                <span class="word" onclick="moveWord(this)">которых</span>
+            </div>
+        </div>
+        <div class="feedback"></div>
+        <div class="controls">
+            <button class="btn-check" onclick="checkTask('task5')">Überprüfen</button>
+            <button class="btn-reset" onclick="resetTask('task5')">Zurücksetzen</button>
+            <button class="btn-solve" onclick="solveTask('task5', ['которые', 'мы', 'смотрели', 'вчера'])">Lösung</button>
+        </div>
+    </div>
+
+    <!-- ÜBUNG 6: Präpositiv (Worüber?) -->
+    <div class="task-card" id="task6">
+        <div class="task-title">Aufgabe 6: Präpositiv (Über wen/was?)</div>
+        <div class="transformation-box">
+            <div class="sentence-part"><span class="label">A</span><span>Это вопросы. (Das sind Fragen.)</span></div>
+            <div class="sentence-part"><span class="label">B</span><span>Мы думаем о вопросах. (Wir denken über die Fragen nach.)</span></div>
+            <div class="arrow-down">⬇</div>
+            <div><em>Ziel: Das sind Fragen, über die wir nachdenken.</em></div>
+        </div>
+        <div class="sentence-builder">
+            <span class="static-start">Это вопросы, </span>
+            <div class="dropzone" data-correct="о которых мы думаем"></div>
+            <div class="word-pool">
+                <span class="word" onclick="moveWord(this)">мы</span>
+                <span class="word" onclick="moveWord(this)">думаем</span>
+                <span class="word" onclick="moveWord(this)">о</span>
+                <span class="word" onclick="moveWord(this)">которых</span>
+                <span class="word" onclick="moveWord(this)">которые</span>
+                <span class="word" onclick="moveWord(this)">с</span> <!-- Distraktor -->
+            </div>
+        </div>
+        <div class="feedback"></div>
+        <div class="controls">
+            <button class="btn-check" onclick="checkTask('task6')">Überprüfen</button>
+            <button class="btn-reset" onclick="resetTask('task6')">Zurücksetzen</button>
+            <button class="btn-solve" onclick="solveTask('task6', ['о', 'которых', 'мы', 'думаем'])">Lösung</button>
+        </div>
+    </div>
+
+    <!-- ÜBUNG 7: Dativ + Präposition "к" -->
+    <div class="task-card" id="task7">
+        <div class="task-title">Aufgabe 7: Dativ + Präposition (Zu wem?)</div>
+        <div class="transformation-box">
+            <div class="sentence-part"><span class="label">A</span><span>Это врачи. (Das sind Ärzte.)</span></div>
+            <div class="sentence-part"><span class="label">B</span><span>Мы ходили к врачам. (Wir sind zu den Ärzten gegangen.)</span></div>
+            <div class="arrow-down">⬇</div>
+            <div><em>Ziel: Das sind Ärzte, zu denen wir gegangen sind.</em></div>
+        </div>
+        <div class="sentence-builder">
+            <span class="static-start">Это врачи, </span>
+            <div class="dropzone" data-correct="к которым мы ходили"></div>
+            <div class="word-pool">
+                <span class="word" onclick="moveWord(this)">мы</span>
+                <span class="word" onclick="moveWord(this)">ходили</span>
+                <span class="word" onclick="moveWord(this)">к</span>
+                <span class="word" onclick="moveWord(this)">которым</span>
+                <span class="word" onclick="moveWord(this)">которых</span> <!-- Distraktor -->
+                <span class="word" onclick="moveWord(this)">с</span> <!-- Distraktor -->
+            </div>
+        </div>
+        <div class="feedback"></div>
+        <div class="controls">
+            <button class="btn-check" onclick="checkTask('task7')">Überprüfen</button>
+            <button class="btn-reset" onclick="resetTask('task7')">Zurücksetzen</button>
+            <button class="btn-solve" onclick="solveTask('task7', ['к', 'которым', 'мы', 'ходили'])">Lösung</button>
+        </div>
+    </div>
+
+    <!-- ÜBUNG 8: Genitiv + Präposition "у" -->
+    <div class="task-card" id="task8">
+        <div class="task-title">Aufgabe 8: Genitiv + Präposition (Bei wem?)</div>
+        <div class="transformation-box">
+            <div class="sentence-part"><span class="label">A</span><span>Это мои коллеги. (Das sind meine Kollegen.)</span></div>
+            <div class="sentence-part"><span class="label">B</span><span>У коллег есть дети. (Die Kollegen haben Kinder / Bei ihnen gibt es Kinder.)</span></div>
+            <div class="arrow-down">⬇</div>
+            <div><em>Ziel: Das sind meine Kollegen, die Kinder haben.</em></div>
+        </div>
+        <div class="sentence-builder">
+            <span class="static-start">Это мои коллеги, </span>
+            <div class="dropzone" data-correct="у которых есть дети"></div>
+            <div class="word-pool">
+                <span class="word" onclick="moveWord(this)">есть</span>
+                <span class="word" onclick="moveWord(this)">дети</span>
+                <span class="word" onclick="moveWord(this)">у</span>
+                <span class="word" onclick="moveWord(this)">которых</span>
+                <span class="word" onclick="moveWord(this)">которые</span> <!-- Distraktor -->
+                <span class="word" onclick="moveWord(this)">которым</span> <!-- Distraktor -->
+            </div>
+        </div>
+        <div class="feedback"></div>
+        <div class="controls">
+            <button class="btn-check" onclick="checkTask('task8')">Überprüfen</button>
+            <button class="btn-reset" onclick="resetTask('task8')">Zurücksetzen</button>
+            <button class="btn-solve" onclick="solveTask('task8', ['у', 'которых', 'есть', 'дети'])">Lösung</button>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // Initial: Shuffle words on load
+    document.addEventListener("DOMContentLoaded", () => {
+        document.querySelectorAll('.word-pool').forEach(pool => {
+            shuffleChildren(pool);
+        });
+    });
+
+    // Helper: Shuffle elements
+    function shuffleChildren(parent) {
+        for (let i = parent.children.length; i >= 0; i--) {
+            parent.appendChild(parent.children[Math.random() * i | 0]);
+        }
+    }
+
+    // Logic: Move Word (Click Interaction)
+    function moveWord(element) {
+        const parent = element.parentElement;
+        const card = element.closest('.task-card');
+        const dropzone = card.querySelector('.dropzone');
+        const pool = card.querySelector('.word-pool');
+
+        // Reset Feedback
+        dropzone.classList.remove('correct', 'incorrect');
+        card.querySelector('.feedback').textContent = '';
+
+        if (parent === pool) {
+            dropzone.appendChild(element);
+        } else {
+            pool.appendChild(element);
+        }
+    }
+
+    // Logic: Check Answer
+    function checkTask(taskId) {
+        const card = document.getElementById(taskId);
+        const dropzone = card.querySelector('.dropzone');
+        const feedback = card.querySelector('.feedback');
+        const correctSentence = dropzone.getAttribute('data-correct').replace(/\s+/g, ' ').trim();
+
+        // Baue den Satz aus den Wörtern in der Dropzone
+        const userWords = Array.from(dropzone.children).map(word => word.innerText.trim());
+        const userSentence = userWords.join(' ');
+
+        if (userSentence === correctSentence) {
+            dropzone.classList.add('correct');
+            dropzone.classList.remove('incorrect');
+            feedback.textContent = "Richtig! Gut gemacht.";
+            feedback.className = "feedback success";
+        } else {
+            dropzone.classList.add('incorrect');
+            dropzone.classList.remove('correct');
+            feedback.className = "feedback error";
+            
+            if (userWords.length === 0) {
+                feedback.textContent = "Bitte wählen Sie Wörter aus.";
+            } else {
+                feedback.textContent = "Leider falsch. Überprüfen Sie die Form von КОТОРЫЕ, die Präposition oder die Wortstellung.";
+            }
+        }
+    }
+
+    // Logic: Reset Task
+    function resetTask(taskId) {
+        const card = document.getElementById(taskId);
+        const dropzone = card.querySelector('.dropzone');
+        const pool = card.querySelector('.word-pool');
+        const feedback = card.querySelector('.feedback');
+
+        // Alle Wörter zurück in den Pool
+        while (dropzone.children.length > 0) {
+            pool.appendChild(dropzone.children[0]);
+        }
+
+        // Mischen
+        shuffleChildren(pool);
+
+        // Feedback zurücksetzen
+        dropzone.classList.remove('correct', 'incorrect');
+        feedback.textContent = '';
+    }
+
+    // Logic: Show Solution
+    function solveTask(taskId, correctOrderArray) {
+        const card = document.getElementById(taskId);
+        const dropzone = card.querySelector('.dropzone');
+        const pool = card.querySelector('.word-pool');
+        const feedback = card.querySelector('.feedback');
+
+        // Erst alles zurücksetzen
+        resetTask(taskId);
+
+        // Dann Wörter in richtiger Reihenfolge finden und verschieben
+        correctOrderArray.forEach(wordText => {
+            const words = Array.from(pool.children);
+            const found = words.find(w => w.innerText.trim() === wordText);
+            
+            if (found) {
+                dropzone.appendChild(found);
+            }
+        });
+
+        dropzone.classList.add('correct');
+        feedback.textContent = "Lösung angezeigt.";
+        feedback.className = "feedback";
+    }
+
+    // Drag & Drop Logic (Mouse + Touch via Polyfill)
+    let draggedItem = null;
+
+    document.querySelectorAll('.word').forEach(word => {
+        word.setAttribute('draggable', true);
+        word.addEventListener('dragstart', function(e) {
+            draggedItem = this;
+            e.dataTransfer.effectAllowed = 'move';
+            // Visuelles Feedback
+            requestAnimationFrame(() => this.style.opacity = '0.5');
+        });
+        word.addEventListener('dragend', function() {
+            this.style.opacity = '1';
+            draggedItem = null;
+        });
+    });
+
+    const containers = document.querySelectorAll('.dropzone, .word-pool');
+    containers.forEach(container => {
+        container.addEventListener('dragover', function(e) {
+            e.preventDefault(); 
+            e.dataTransfer.dropEffect = 'move';
+        });
+        container.addEventListener('drop', function(e) {
+            e.preventDefault();
+            if (draggedItem) {
+                if (e.target.classList.contains('word') && e.target.parentElement === this) {
+                    this.insertBefore(draggedItem, e.target);
+                } else {
+                    this.appendChild(draggedItem);
+                }
+                
+                // Feedback Reset
+                const card = this.closest('.task-card');
+                card.querySelector('.dropzone').classList.remove('correct', 'incorrect');
+                card.querySelector('.feedback').textContent = '';
+            }
+        });
+    });
+
+</script>
+
+</body>
+</html>
