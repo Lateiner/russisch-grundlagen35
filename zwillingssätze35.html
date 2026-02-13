@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Spezialaufgabe: Belebt vs. Unbelebt (6 Beispiele)</title>
+    <style>
+        :root {
+            --bg-color: #f5f7fa;
+            --primary: #2c3e50;
+            --accent: #3498db;     /* Blau */
+            --object: #e67e22;     /* Orange für Unbelebt */
+            --person: #9b59b6;     /* Lila für Belebt */
+            --success: #27ae60;
+            --error: #c0392b;
+            --card-bg: #ffffff;
+            --border: #e1e8ed;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--primary);
+            margin: 0;
+            padding: 15px;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding-bottom: 80px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            background: #fff;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            border-top: 5px solid var(--accent);
+        }
+
+        h1 { margin: 0 0 5px 0; color: var(--primary); font-size: 1.6rem; }
+        p { margin: 0; color: #7f8c8d; }
+
+        .intro-box {
+            background-color: #eaf2f8;
+            border-left: 5px solid var(--accent);
+            padding: 15px;
+            margin-bottom: 30px;
+            border-radius: 4px;
+            font-size: 0.95rem;
+        }
+
+        /* --- TWIN CARD CONTAINER --- */
+        .twin-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+
+        .twin-header {
+            background: #f8f9fa;
+            padding: 10px 15px;
+            border-bottom: 1px solid var(--border);
+            font-weight: bold;
+            color: #7f8c8d;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* FLEX LAYOUT FOR DESKTOP (Side by Side) */
+        .comparison-wrapper {
+            display: flex;
+            flex-direction: row;
+        }
+
+        /* UNIT (One Sentence) */
+        .sentence-unit {
+            flex: 1;
+            padding: 20px;
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            transition: background 0.3s;
+        }
+
+        .sentence-unit:last-child { border-right: none; }
+
+        /* Mobile Layout: Stacked */
+        @media (max-width: 700px) {
+            .comparison-wrapper { flex-direction: column; }
+            .sentence-unit { border-right: none; border-bottom: 1px solid var(--border); }
+            .sentence-unit:last-child { border-bottom: none; }
+        }
+
+        /* Type Badge (Person vs Object) */
+        .type-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: white;
+            margin-bottom: 10px;
+            align-self: flex-start;
+        }
+        .type-obj { background-color: var(--object); }
+        .type-pers { background-color: var(--person); }
+
+        .sentence-text {
+            font-size: 1.2rem;
+            font-weight: 500;
+        }
+
+        .highlight {
+            font-weight: bold;
+            text-decoration: underline;
+            text-decoration-thickness: 2px;
+        }
+
+        .highlight.obj { text-decoration-color: var(--object); color: var(--object); }
+        .highlight.pers { text-decoration-color: var(--person); color: var(--person); }
+
+        /* Options (Buttons) */
+        .options-group {
+            display: flex;
+            gap: 10px;
+            margin-top: auto; /* Push to bottom */
+        }
+
+        .opt-btn {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid #ddd;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1rem;
+            transition: all 0.2s;
+            color: #555;
+        }
+
+        .opt-btn:hover { background: #f0f0f0; }
+
+        .opt-btn.selected {
+            border-color: var(--accent);
+            background-color: var(--accent);
+            color: white;
+            box-shadow: 0 2px 5px rgba(52, 152, 219, 0.4);
+        }
+
+        /* FEEDBACK COLORS */
+        .opt-btn.correct { background-color: var(--success) !important; border-color: var(--success) !important; color: white !important; }
+        .opt-btn.wrong { background-color: var(--error) !important; border-color: var(--error) !important; color: white !important; opacity: 0.6; }
+
+        /* CONTROLS (Bottom of Card) */
+        .card-controls {
+            padding: 15px;
+            background: #fdfdfd;
+            border-top: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .feedback-box {
+            font-weight: bold;
+            font-size: 0.95rem;
+            text-align: center;
+            min-height: 24px;
+        }
+        .feedback-box.success { color: var(--success); }
+        .feedback-box.error { color: var(--error); }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            color: white;
+            font-size: 1rem;
+        }
+        .btn-check { background-color: var(--primary); }
+        .btn-reset { background-color: #95a5a6; }
+        .btn-solve { background-color: var(--accent); }
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Zwillings-Sätze 👯</h1>
+        <p>Unterscheidung: Belebt vs. Unbelebt (Akkusativ)</p>
+    </header>
+
+    <div class="intro-box">
+        <strong>Die Akkusativ-Regel (Fall 4):</strong>
+        <br>📦 <strong>Unbelebt</strong> (Dinge): Form wie Nominativ (1) -> <strong>КОТОРЫЕ</strong>
+        <br>👤 <strong>Belebt</strong> (Personen/Tiere): Form wie Genitiv (2) -> <strong>КОТОРЫХ</strong>
+        <br>
+        <br>Vergleichen Sie die Sätze und wählen Sie die richtige Form.
+    </div>
+
+    <!-- PAIR 1: See (sehen) -->
+    <div class="twin-card" id="pair1">
+        <div class="twin-header">
+            <span>Verb: видеть (sehen) + Akkusativ</span>
+            <span>1/6</span>
+        </div>
+        <div class="comparison-wrapper">
+            <!-- Unit A: Object -->
+            <div class="sentence-unit" id="p1-a" data-correct="которые">
+                <div class="type-badge type-obj">📦 Unbelebt</div>
+                <div class="sentence-text">
+                    Я вижу <span class="highlight obj">автобусы</span>,<br> ... стоят там.
+                </div>
+                <div class="options-group">
+                    <button class="opt-btn" onclick="select(this, 'p1-a', 'которые')">которые</button>
+                    <button class="opt-btn" onclick="select(this, 'p1-a', 'которых')">которых</button>
+                </div>
+            </div>
+            <!-- Unit B: Person -->
+            <div class="sentence-unit" id="p1-b" data-correct="которых">
+                <div class="type-badge type-pers">👤 Belebt</div>
+                <div class="sentence-text">
+                    Я вижу <span class="highlight pers">студентов</span>,<br> ... стоят там.
+                </div>
+                <div class="options-group">
+                    <button class="opt-btn" onclick="select(this, 'p1-b', 'которые')">которые</button>
+                    <button class="opt-btn" onclick="select(this, 'p1-b', 'которых')">которых</button>
+                </div>
+            </div>
+        </div>
+        <div class="card-controls">
+            <div class="feedback-box"></div>
+            <div class="btn-group">
+                <button class="action-btn btn-check" onclick="checkPair('pair1')">Überprüfen</button>
+                <button class="action-btn btn-reset" onclick="resetPair('pair1')">Reset</button>
+                <button class="action-btn btn-solve" onclick="solvePair('pair1')">Lösung</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PAIR 2: Love (lieben) -->
+    <div class="twin-card" id="pair2">
+        <div class="twin-header">
+            <span>Verb: любить (lieben) + Akkusativ</span>
+            <span>2/6</span>
+        </div>
+        <div class="comparison-wrapper">
+            <!-- Unit A: Object -->
+            <div class="sentence-unit" id="p2-a" data-correct="которые">
+                <div class="type-badge type-obj">📦 Unbelebt</div>
+                <div class="sentence-text">
+                    Я люблю <span class="highlight obj">фильмы</span>,<br> ... мы смотрели.
+                </div>
+                <div class="options-group">
+                    <button class="opt-btn" onclick="select(this, 'p2-a', 'которые')">которые</button>
+                    <button class="opt-btn" onclick="select(this, 'p2-a', 'которых')">которых</button>
+                </div>
+            </div>
+            <!-- Unit B: Person -->
+            <div class="sentence-unit" id="p2-b" data-correct="которых">
+                <div class="type-badge type-pers">👤 Belebt</div>
+                <div class="sentence-text">
+                    Я люблю <span class="highlight pers">актеров</span>,<br> ... мы смотрели.
+                </div>
+                <div class="options-group">
+                    <button class="opt-btn" onclick="select(this, 'p2-b', 'которые')">которые</button>
+                    <button class="opt-btn" onclick="select(this, 'p2-b', 'которых')">которых</button>
+                </div>
+            </div>
+        </div>
+        <div class="card-controls">
+            <div class="feedback-box"></div>
+            <div class="btn-group">
+                <button class="action-btn btn-check" onclick="checkPair('pair2')">Überprüfen</button>
+                <button class="action-btn btn-reset" onclick="resetPair('pair2')">Reset</button>
+                <button class="action-btn btn-solve" onclick="solvePair('pair2')">Lösung</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PAIR 3: Wait for (warten auf) -->
+    <div class="twin-card" id="pair3">
+        <div class="twin-header">
+            <span>Verb: ждать (warten auf) + Akkusativ</span>
+            <span>3/6</span>
+        </div>
+        <div class="comparison-wrapper">
+            <!-- Unit A: Object -->
+            <div class="sentence-unit" id="p3-a" data-correct="которые">
+                <div class="type-badge type-obj">📦 Unbelebt</div>
+                <div class="sentence-text">
+                    Мы ждем <span class="highlight obj">трамваи</span>,<br> ... идут в центр.
+                </div>
+                <div class="options-group">
+                    <button class="opt-btn" onclick="select(this, 'p3-a', 'которые')">которые</button>
+                    <button class="opt-btn" onclick="select(this, 'p3-a', 'которых')">которых</button>
+                </div>
+            </div>
+            <!-- Unit B: Person -->
+            <div class="sentence-unit" id="p3-b" data-correct="которых">
+                <div class="type-badge type-pers">👤 Belebt</div>
+                <div class="sentence-text">
+                    Мы ждем <span class="highlight pers">друзей</span>,<br> ... идут в центр.
+                </div>
+                <div class="options-group">
+                    <button class="opt-btn" onclick="select(this, 'p3-b', 'которые')">которые</button>
+                    <button class="opt-btn" onclick="select(this, 'p3-b', 'которых')">которых</button>
+                </div>
+            </div>
+        </div>
+        <div class="card-controls">
+            <div class="feedback-box"></div>
+            <div class="btn-group">
+                <button class="action-btn btn-check" onclick="checkPair('pair3')">Überprüfen</button>
+                <button class="action-btn btn-reset" onclick="resetPair('pair3')">Reset</button>
+                <button class="action-btn btn-solve" onclick="solvePair('pair3')">Lösung</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PAIR 4: Know (kennen) -->
+    <div class="twin-card" id="pair4">
+        <div class="twin-header">
+            <span>Verb: знать (kennen) + Akkusativ</span>
+            <span>4/6</span>
+        </div>
+        <div class="comparison-wrapper">
+            <!-- Unit A: Object -->
+            <div class="sentence-unit" id="p4-a" data-correct="которые">
+                <div class="type-badge type-obj">📦 Unbelebt</div>
+                <div class="sentence-text">
+                    Я знаю <span class="highlight obj">песни</span>,<br> ... ты поешь.
+                </div>
+                <div class="options-group">
+                    <button class="opt-btn" onclick="select(this, 'p4-a', 'которые')">которые</button>
+                    <button class="opt-btn" onclick="select(this, 'p4-a', 'которых')">которых</button>
+                </div>
+            </div>
+            <!-- Unit B: Person -->
+            <div class="sentence-unit" id="p4-b" data-correct="которых">
+                <div class="type-badge type-pers">👤 Belebt</div>
+                <div class="sentence-text">
+                    Я знаю <span class="highlight pers">девушек</span>,<br> ... ты знаешь.
+                </div>
+                <div class="options-group">
+                    <button class="opt-btn" onclick="select(this, 'p4-b', 'которые')">которые</button>
+                    <button class="opt-btn" onclick="select(this, 'p4-b', 'которых')">которых</button>
+                </div>
+            </div>
+        </div>
+        <div class="card-controls">
+            <div class="feedback-box"></div>
+            <div class="btn-group">
+                <button class="action-btn btn-check" onclick="checkPair('pair4')">Überprüfen</button>
+                <button class="action-btn btn-reset" onclick="resetPair('pair4')">Reset</button>
+                <button class="action-btn btn-solve" onclick="solvePair('pair4')">Lösung</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PAIR 5: Find (finden) -->
+    <div class="twin-card" id="pair5">
+        <div class="twin-header">
+            <span>Verb: найти (finden) + Akkusativ</span>
+            <span>5/6</span>
+        </div>
+        <div class="comparison-wrapper">
+            <!-- Unit A: Object -->
+            <div class="sentence-unit" id="p5-a" data-correct="которые">
+                <div class="type-badge type-obj">📦 Unbelebt</div>
+                <div class="sentence-text">
+                    Я нашел <span class="highlight obj">книги</span>,<br> ... я искал.
+                </div>
+                <div class="options-group">
+                    <button class="opt-btn" onclick="select(this, 'p5-a', 'которые')">которые</button>
+                    <button class="opt-btn" onclick="select(this, 'p5-a', 'которых')">которых</button>
+                </div>
+            </div>
+            <!-- Unit B: Person -->
+            <div class="sentence-unit" id="p5-b" data-correct="которых">
+                <div class="type-badge type-pers">👤 Belebt</div>
+                <div class="sentence-text">
+                    Я нашел <span class="highlight pers">туристов</span>,<br> ... я искал.
+                </div>
+                <div class="options-group">
+                    <button class="opt-btn" onclick="select(this, 'p5-b', 'которые')">которые</button>
+                    <button class="opt-btn" onclick="select(this, 'p5-b', 'которых')">которых</button>
+                </div>
+            </div>
+        </div>
+        <div class="card-controls">
+            <div class="feedback-box"></div>
+            <div class="btn-group">
+                <button class="action-btn btn-check" onclick="checkPair('pair5')">Überprüfen</button>
+                <button class="action-btn btn-reset" onclick="resetPair('pair5')">Reset</button>
+                <button class="action-btn btn-solve" onclick="solvePair('pair5')">Lösung</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PAIR 6: Meet (treffen/abholen) -->
+    <div class="twin-card" id="pair6">
+        <div class="twin-header">
+            <span>Verb: встречать (treffen/abholen) + Akkusativ</span>
+            <span>6/6</span>
+        </div>
+        <div class="comparison-wrapper">
+            <!-- Unit A: Object -->
+            <div class="sentence-unit" id="p6-a" data-correct="которые">
+                <div class="type-badge type-obj">📦 Unbelebt</div>
+                <div class="sentence-text">
+                    Мы встречаем <span class="highlight obj">поезда</span>,<br> ... прибывают.
+                </div>
+                <div class="options-group">
+                    <button class="opt-btn" onclick="select(this, 'p6-a', 'которые')">которые</button>
+                    <button class="opt-btn" onclick="select(this, 'p6-a', 'которых')">которых</button>
+                </div>
+            </div>
+            <!-- Unit B: Person -->
+            <div class="sentence-unit" id="p6-b" data-correct="которых">
+                <div class="type-badge type-pers">👤 Belebt</div>
+                <div class="sentence-text">
+                    Мы встречаем <span class="highlight pers">гостей</span>,<br> ... приехали.
+                </div>
+                <div class="options-group">
+                    <button class="opt-btn" onclick="select(this, 'p6-b', 'которые')">которые</button>
+                    <button class="opt-btn" onclick="select(this, 'p6-b', 'которых')">которых</button>
+                </div>
+            </div>
+        </div>
+        <div class="card-controls">
+            <div class="feedback-box"></div>
+            <div class="btn-group">
+                <button class="action-btn btn-check" onclick="checkPair('pair6')">Überprüfen</button>
+                <button class="action-btn btn-reset" onclick="resetPair('pair6')">Reset</button>
+                <button class="action-btn btn-solve" onclick="solvePair('pair6')">Lösung</button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // Stores user selection: { 'p1-a': 'которые', 'p1-b': 'которых' ... }
+    let selections = {};
+
+    function select(btn, unitId, value) {
+        // Find container
+        const unit = document.getElementById(unitId);
+        
+        // Visual Update
+        const allBtns = unit.querySelectorAll('.opt-btn');
+        allBtns.forEach(b => {
+            b.classList.remove('selected', 'correct', 'wrong');
+        });
+        
+        btn.classList.add('selected');
+        
+        // Store Value
+        selections[unitId] = value;
+        
+        // Clear feedback in parent card
+        const card = unit.closest('.twin-card');
+        card.querySelector('.feedback-box').textContent = '';
+    }
+
+    function checkPair(cardId) {
+        const card = document.getElementById(cardId);
+        const units = card.querySelectorAll('.sentence-unit');
+        const feedback = card.querySelector('.feedback-box');
+        
+        let allCorrect = true;
+        let answeredCount = 0;
+
+        units.forEach(unit => {
+            const unitId = unit.id;
+            const correctVal = unit.getAttribute('data-correct');
+            const userVal = selections[unitId];
+            
+            // Find selected button
+            const selectedBtn = unit.querySelector('.opt-btn.selected');
+
+            if (userVal) {
+                answeredCount++;
+                if (userVal === correctVal) {
+                    selectedBtn.classList.add('correct');
+                } else {
+                    selectedBtn.classList.add('wrong');
+                    allCorrect = false;
+                }
+            } else {
+                allCorrect = false;
+            }
+        });
+
+        if (answeredCount < 2) {
+            feedback.textContent = "Bitte beantworten Sie beide Sätze.";
+            feedback.className = "feedback-box";
+            feedback.style.color = "#e67e22";
+            return;
+        }
+
+        if (allCorrect) {
+            feedback.textContent = "Perfekt! Der Unterschied ist erkannt.";
+            feedback.className = "feedback-box success";
+        } else {
+            feedback.textContent = "Nicht ganz. Denken Sie an: Unbelebt = Nominativ, Belebt = Genitiv.";
+            feedback.className = "feedback-box error";
+        }
+    }
+
+    function resetPair(cardId) {
+        const card = document.getElementById(cardId);
+        const units = card.querySelectorAll('.sentence-unit');
+        
+        units.forEach(unit => {
+            selections[unit.id] = null;
+            unit.querySelectorAll('.opt-btn').forEach(b => {
+                b.classList.remove('selected', 'correct', 'wrong');
+            });
+        });
+        
+        card.querySelector('.feedback-box').textContent = '';
+    }
+
+    function solvePair(cardId) {
+        resetPair(cardId); // Clear visuals first
+        const card = document.getElementById(cardId);
+        const units = card.querySelectorAll('.sentence-unit');
+        
+        units.forEach(unit => {
+            const correctVal = unit.getAttribute('data-correct');
+            // Find button with this text
+            const btns = unit.querySelectorAll('.opt-btn');
+            btns.forEach(b => {
+                if (b.textContent === correctVal) {
+                    b.classList.add('correct');
+                }
+            });
+        });
+        
+        const fb = card.querySelector('.feedback-box');
+        fb.textContent = "Lösung angezeigt.";
+        fb.className = "feedback-box success";
+    }
+
+</script>
+
+</body>
+</html>
