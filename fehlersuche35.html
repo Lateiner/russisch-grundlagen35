@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Fehlersuche: Sofortiges Feedback</title>
+    <style>
+        :root {
+            --neutral: #3498db;      /* Blau für Auswahl */
+            --success: #27ae60;      /* Grün für Richtig */
+            --error: #e74c3c;        /* Rot für Falsch */
+            --bg: #f4f7f6;
+            --card-bg: #ffffff;
+            --border: #dcdcdc;
+            --text: #2c3e50;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 15px;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding-bottom: 50px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        h1 { margin: 0 0 10px 0; color: #2980b9; font-size: 1.5rem; }
+
+        .intro-box {
+            background-color: #fff;
+            border-left: 5px solid var(--neutral);
+            padding: 15px;
+            margin-bottom: 25px;
+            border-radius: 4px;
+            font-size: 0.95rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        /* Sentence Card */
+        .sentence-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 25px;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.05);
+            border: 1px solid var(--border);
+        }
+
+        .sentence-header {
+            font-weight: bold;
+            color: #95a5a6;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+        }
+
+        .sentence-text {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+
+        .highlight {
+            color: #2980b9;
+            font-weight: bold;
+            text-decoration: underline;
+            text-decoration-thickness: 2px;
+            text-underline-offset: 3px;
+        }
+
+        /* Decision Buttons */
+        .decision-area {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .toggle-btn {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid var(--border);
+            background: white;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 1rem;
+            color: #7f8c8d;
+        }
+
+        .toggle-btn:hover { background-color: #f0f0f0; }
+
+        /* Status: Selected (Neutral Blue) */
+        .toggle-btn.selected {
+            background-color: var(--neutral);
+            border-color: var(--neutral);
+            color: white;
+        }
+
+        /* Status: Validated Correct (Green) */
+        .toggle-btn.validated-correct {
+            background-color: var(--success) !important;
+            border-color: var(--success) !important;
+            color: white !important;
+        }
+
+        /* Status: Validated Wrong (Red) */
+        .toggle-btn.validated-wrong {
+            background-color: var(--error) !important;
+            border-color: var(--error) !important;
+            color: white !important;
+        }
+
+        /* Correction Area */
+        .correction-area {
+            display: none; /* Hidden by default */
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border: 1px dashed #ccc;
+        }
+
+        .correction-label {
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: #555;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .correction-options {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .corr-btn {
+            padding: 8px 14px;
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+        }
+
+        .corr-btn:hover { background: #eef; }
+
+        .corr-btn.selected {
+            background-color: var(--neutral);
+            color: white;
+            border-color: var(--neutral);
+        }
+
+        .corr-btn.validated-correct {
+            background-color: var(--success) !important;
+            border-color: var(--success) !important;
+        }
+        
+        .corr-btn.validated-wrong {
+            background-color: var(--error) !important;
+            border-color: var(--error) !important;
+        }
+
+        /* Local Controls (The Buttons per Card) */
+        .local-controls {
+            display: flex;
+            gap: 8px;
+            margin-top: 15px;
+            border-top: 1px solid #eee;
+            padding-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .control-btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            cursor: pointer;
+            min-width: 100px;
+        }
+
+        .btn-check { background-color: var(--text); color: white; }
+        .btn-check:hover { background-color: #1a252f; }
+        
+        .btn-reset { background-color: #bdc3c7; color: white; }
+        .btn-reset:hover { background-color: #95a5a6; }
+
+        .btn-solve { background-color: #f39c12; color: white; }
+        .btn-solve:hover { background-color: #e67e22; }
+
+        /* Feedback Text */
+        .feedback {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            display: none;
+            font-weight: 500;
+            text-align: center;
+        }
+        
+        .feedback.success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .feedback.error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+
+        @media (max-width: 600px) {
+            .local-controls { flex-direction: column; }
+            .control-btn { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Fehlersuche: Sofortiges Feedback</h1>
+        <p>Entscheiden, Korrigieren, Prüfen</p>
+    </header>
+
+    <div class="intro-box">
+        <strong>Anleitung:</strong>
+        <br>1. Wählen Sie <strong>RICHTIG</strong> oder <strong>FALSCH</strong> (Blau = ausgewählt).
+        <br>2. Bei "Falsch": Wählen Sie die Korrektur.
+        <br>3. Klicken Sie auf <strong>Überprüfen</strong>.
+        <br>4. <strong>Grün</strong> = Alles korrekt. <strong>Rot</strong> = Fehler (bitte korrigieren).
+    </div>
+
+    <!-- SATZ 1: Fehler (Akkusativ Belebt) -->
+    <div class="sentence-card" id="card1" data-status="wrong" data-solution="которых">
+        <div class="sentence-header">Satz 1</div>
+        <div class="sentence-text">
+            Я вижу людей, <span class="highlight">которые</span> я знаю.
+        </div>
+        <div class="decision-area">
+            <button class="toggle-btn" onclick="selectDecision('card1', 'correct')">RICHTIG</button>
+            <button class="toggle-btn" onclick="selectDecision('card1', 'wrong')">FALSCH</button>
+        </div>
+        <div class="correction-area">
+            <span class="correction-label">Korrektur wählen:</span>
+            <div class="correction-options">
+                <button class="corr-btn" onclick="selectCorrection('card1', 'которых')">которых</button>
+                <button class="corr-btn" onclick="selectCorrection('card1', 'которым')">которым</button>
+                <button class="corr-btn" onclick="selectCorrection('card1', 'которыми')">которыми</button>
+            </div>
+        </div>
+        <div class="feedback"></div>
+        <div class="local-controls">
+            <button class="control-btn btn-check" onclick="checkLocal('card1')">Überprüfen</button>
+            <button class="control-btn btn-reset" onclick="resetLocal('card1')">Zurücksetzen</button>
+            <button class="control-btn btn-solve" onclick="solveLocal('card1')">Lösung anzeigen</button>
+        </div>
+    </div>
+
+    <!-- SATZ 2: Korrekt (Nominativ) -->
+    <div class="sentence-card" id="card2" data-status="correct" data-solution="correct">
+        <div class="sentence-header">Satz 2</div>
+        <div class="sentence-text">
+            Это студенты, <span class="highlight">которые</span> учатся здесь.
+        </div>
+        <div class="decision-area">
+            <button class="toggle-btn" onclick="selectDecision('card2', 'correct')">RICHTIG</button>
+            <button class="toggle-btn" onclick="selectDecision('card2', 'wrong')">FALSCH</button>
+        </div>
+        <div class="correction-area">
+            <span class="correction-label">Korrektur wählen:</span>
+            <div class="correction-options">
+                <button class="corr-btn" onclick="selectCorrection('card2', 'которых')">которых</button>
+                <button class="corr-btn" onclick="selectCorrection('card2', 'которым')">которым</button>
+            </div>
+        </div>
+        <div class="feedback"></div>
+        <div class="local-controls">
+            <button class="control-btn btn-check" onclick="checkLocal('card2')">Überprüfen</button>
+            <button class="control-btn btn-reset" onclick="resetLocal('card2')">Zurücksetzen</button>
+            <button class="control-btn btn-solve" onclick="solveLocal('card2')">Lösung anzeigen</button>
+        </div>
+    </div>
+
+    <!-- SATZ 3: Fehler (Dativ) -->
+    <div class="sentence-card" id="card3" data-status="wrong" data-solution="которым">
+        <div class="sentence-header">Satz 3</div>
+        <div class="sentence-text">
+            Это друзья, <span class="highlight">которых</span> я помогаю.
+        </div>
+        <div class="decision-area">
+            <button class="toggle-btn" onclick="selectDecision('card3', 'correct')">RICHTIG</button>
+            <button class="toggle-btn" onclick="selectDecision('card3', 'wrong')">FALSCH</button>
+        </div>
+        <div class="correction-area">
+            <span class="correction-label">Korrektur wählen:</span>
+            <div class="correction-options">
+                <button class="corr-btn" onclick="selectCorrection('card3', 'которые')">которые</button>
+                <button class="corr-btn" onclick="selectCorrection('card3', 'которым')">которым</button>
+                <button class="corr-btn" onclick="selectCorrection('card3', 'которыми')">которыми</button>
+            </div>
+        </div>
+        <div class="feedback"></div>
+        <div class="local-controls">
+            <button class="control-btn btn-check" onclick="checkLocal('card3')">Überprüfen</button>
+            <button class="control-btn btn-reset" onclick="resetLocal('card3')">Zurücksetzen</button>
+            <button class="control-btn btn-solve" onclick="solveLocal('card3')">Lösung anzeigen</button>
+        </div>
+    </div>
+
+    <!-- SATZ 4: Fehler (Unbelebt Akkusativ - Falscher Genitiv verwendet) -->
+    <div class="sentence-card" id="card4" data-status="wrong" data-solution="которые">
+        <div class="sentence-header">Satz 4</div>
+        <div class="sentence-text">
+            Вот книги, <span class="highlight">которых</span> я купил вчера.
+        </div>
+        <div class="decision-area">
+            <button class="toggle-btn" onclick="selectDecision('card4', 'correct')">RICHTIG</button>
+            <button class="toggle-btn" onclick="selectDecision('card4', 'wrong')">FALSCH</button>
+        </div>
+        <div class="correction-area">
+            <span class="correction-label">Korrektur wählen:</span>
+            <div class="correction-options">
+                <button class="corr-btn" onclick="selectCorrection('card4', 'которые')">которые</button>
+                <button class="corr-btn" onclick="selectCorrection('card4', 'которым')">которым</button>
+            </div>
+        </div>
+        <div class="feedback"></div>
+        <div class="local-controls">
+            <button class="control-btn btn-check" onclick="checkLocal('card4')">Überprüfen</button>
+            <button class="control-btn btn-reset" onclick="resetLocal('card4')">Zurücksetzen</button>
+            <button class="control-btn btn-solve" onclick="solveLocal('card4')">Lösung anzeigen</button>
+        </div>
+    </div>
+
+    <!-- SATZ 5: Korrekt (Instrumental) -->
+    <div class="sentence-card" id="card5" data-status="correct" data-solution="correct">
+        <div class="sentence-header">Satz 5</div>
+        <div class="sentence-text">
+            Это коллеги, с <span class="highlight">которыми</span> мы работаем.
+        </div>
+        <div class="decision-area">
+            <button class="toggle-btn" onclick="selectDecision('card5', 'correct')">RICHTIG</button>
+            <button class="toggle-btn" onclick="selectDecision('card5', 'wrong')">FALSCH</button>
+        </div>
+        <div class="correction-area">
+            <span class="correction-label">Korrektur wählen:</span>
+            <div class="correction-options">
+                <button class="corr-btn" onclick="selectCorrection('card5', 'которые')">которые</button>
+                <button class="corr-btn" onclick="selectCorrection('card5', 'которых')">которых</button>
+            </div>
+        </div>
+        <div class="feedback"></div>
+        <div class="local-controls">
+            <button class="control-btn btn-check" onclick="checkLocal('card5')">Überprüfen</button>
+            <button class="control-btn btn-reset" onclick="resetLocal('card5')">Zurücksetzen</button>
+            <button class="control-btn btn-solve" onclick="solveLocal('card5')">Lösung anzeigen</button>
+        </div>
+    </div>
+    
+    <!-- SATZ 6: Fehler (Genitiv nach Präposition) -->
+    <div class="sentence-card" id="card6" data-status="wrong" data-solution="которых">
+        <div class="sentence-header">Satz 6</div>
+        <div class="sentence-text">
+            Это люди, у <span class="highlight">которые</span> нет денег.
+        </div>
+        <div class="decision-area">
+            <button class="toggle-btn" onclick="selectDecision('card6', 'correct')">RICHTIG</button>
+            <button class="toggle-btn" onclick="selectDecision('card6', 'wrong')">FALSCH</button>
+        </div>
+        <div class="correction-area">
+            <span class="correction-label">Korrektur wählen:</span>
+            <div class="correction-options">
+                <button class="corr-btn" onclick="selectCorrection('card6', 'которых')">которых</button>
+                <button class="corr-btn" onclick="selectCorrection('card6', 'которым')">которым</button>
+                <button class="corr-btn" onclick="selectCorrection('card6', 'которыми')">которыми</button>
+            </div>
+        </div>
+        <div class="feedback"></div>
+        <div class="local-controls">
+            <button class="control-btn btn-check" onclick="checkLocal('card6')">Überprüfen</button>
+            <button class="control-btn btn-reset" onclick="resetLocal('card6')">Zurücksetzen</button>
+            <button class="control-btn btn-solve" onclick="solveLocal('card6')">Lösung anzeigen</button>
+        </div>
+    </div>
+
+    <!-- SATZ 7: Korrekt (Dativ mit Präposition) -->
+    <div class="sentence-card" id="card7" data-status="correct" data-solution="correct">
+        <div class="sentence-header">Satz 7</div>
+        <div class="sentence-text">
+            Это врачи, к <span class="highlight">которым</span> мы ходили.
+        </div>
+        <div class="decision-area">
+            <button class="toggle-btn" onclick="selectDecision('card7', 'correct')">RICHTIG</button>
+            <button class="toggle-btn" onclick="selectDecision('card7', 'wrong')">FALSCH</button>
+        </div>
+        <div class="correction-area">
+            <span class="correction-label">Korrektur wählen:</span>
+            <div class="correction-options">
+                <button class="corr-btn" onclick="selectCorrection('card7', 'которых')">которых</button>
+                <button class="corr-btn" onclick="selectCorrection('card7', 'которым')">которым</button>
+            </div>
+        </div>
+        <div class="feedback"></div>
+        <div class="local-controls">
+            <button class="control-btn btn-check" onclick="checkLocal('card7')">Überprüfen</button>
+            <button class="control-btn btn-reset" onclick="resetLocal('card7')">Zurücksetzen</button>
+            <button class="control-btn btn-solve" onclick="solveLocal('card7')">Lösung anzeigen</button>
+        </div>
+    </div>
+
+    <!-- SATZ 8: Fehler (Präpositiv) -->
+    <div class="sentence-card" id="card8" data-status="wrong" data-solution="которых">
+        <div class="sentence-header">Satz 8</div>
+        <div class="sentence-text">
+            Это фильмы, о <span class="highlight">которые</span> все говорят.
+        </div>
+        <div class="decision-area">
+            <button class="toggle-btn" onclick="selectDecision('card8', 'correct')">RICHTIG</button>
+            <button class="toggle-btn" onclick="selectDecision('card8', 'wrong')">FALSCH</button>
+        </div>
+        <div class="correction-area">
+            <span class="correction-label">Korrektur wählen:</span>
+            <div class="correction-options">
+                <button class="corr-btn" onclick="selectCorrection('card8', 'которых')">которых</button>
+                <button class="corr-btn" onclick="selectCorrection('card8', 'которые')">которые</button>
+                <button class="corr-btn" onclick="selectCorrection('card8', 'которым')">которым</button>
+            </div>
+        </div>
+        <div class="feedback"></div>
+        <div class="local-controls">
+            <button class="control-btn btn-check" onclick="checkLocal('card8')">Überprüfen</button>
+            <button class="control-btn btn-reset" onclick="resetLocal('card8')">Zurücksetzen</button>
+            <button class="control-btn btn-solve" onclick="solveLocal('card8')">Lösung anzeigen</button>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // Store user inputs: { cardId: { decision: 'correct'|'wrong', correction: 'word' } }
+    let userState = {};
+
+    // 1. SELECT DECISION (Button click)
+    function selectDecision(cardId, decision) {
+        if (!userState[cardId]) userState[cardId] = {};
+        userState[cardId].decision = decision;
+        
+        // UI Updates: Neutral Blue selection
+        const card = document.getElementById(cardId);
+        const btns = card.querySelectorAll('.toggle-btn');
+        const corrArea = card.querySelector('.correction-area');
+        
+        // Remove validation classes (reset colors if user changes mind)
+        btns.forEach(btn => {
+            btn.classList.remove('selected', 'validated-correct', 'validated-wrong');
+            // If this is the clicked button, make it blue
+            if(btn.textContent.trim() === (decision === 'correct' ? 'RICHTIG' : 'FALSCH')) {
+                btn.classList.add('selected');
+            }
+        });
+
+        // Hide old feedback when changing selection
+        const feedback = card.querySelector('.feedback');
+        feedback.style.display = 'none';
+
+        // Show/Hide correction area
+        if (decision === 'wrong') {
+            corrArea.style.display = 'block';
+        } else {
+            corrArea.style.display = 'none';
+            userState[cardId].correction = null; 
+        }
+    }
+
+    // 2. SELECT CORRECTION (Button click)
+    function selectCorrection(cardId, word) {
+        if (!userState[cardId]) userState[cardId] = {};
+        userState[cardId].correction = word;
+
+        const card = document.getElementById(cardId);
+        const btns = card.querySelectorAll('.corr-btn');
+        
+        // Reset colors, set blue selection
+        btns.forEach(btn => {
+            btn.classList.remove('selected', 'validated-correct', 'validated-wrong');
+            if(btn.textContent === word) btn.classList.add('selected');
+        });
+        
+        // Hide feedback when changing selection
+        const feedback = card.querySelector('.feedback');
+        feedback.style.display = 'none';
+    }
+
+    // 3. CHECK (Logik Überprüfung)
+    function checkLocal(cardId) {
+        const card = document.getElementById(cardId);
+        const actualStatus = card.getAttribute('data-status'); // 'correct' or 'wrong'
+        const actualSolution = card.getAttribute('data-solution');
+        const feedback = card.querySelector('.feedback');
+        const state = userState[cardId];
+
+        // Ensure user made a selection
+        if (!state || !state.decision) {
+            feedback.style.display = 'block';
+            feedback.textContent = "Bitte wählen Sie erst RICHTIG oder FALSCH.";
+            feedback.className = 'feedback error';
+            return;
+        }
+
+        // --- Validation Logic ---
+        
+        // Find the selected Toggle Button
+        let selectedToggle = null;
+        card.querySelectorAll('.toggle-btn').forEach(btn => {
+            if(btn.classList.contains('selected')) selectedToggle = btn;
+        });
+
+        // Find the selected Correction Button
+        let selectedCorr = null;
+        card.querySelectorAll('.corr-btn').forEach(btn => {
+            if(btn.classList.contains('selected')) selectedCorr = btn;
+        });
+
+        // Remove old 'selected' blue class, replace with Red/Green
+        if(selectedToggle) selectedToggle.classList.remove('selected');
+        if(selectedCorr) selectedCorr.classList.remove('selected');
+
+        // Logic Tree
+        if (state.decision === actualStatus) {
+            // Decision (Right/Wrong) matches reality
+            
+            if (actualStatus === 'correct') {
+                // User said "Right", Sentence is "Right" -> GREEN
+                if(selectedToggle) selectedToggle.classList.add('validated-correct');
+                feedback.textContent = "Richtig! Dieser Satz ist fehlerfrei.";
+                feedback.className = 'feedback success';
+            } else {
+                // User said "Wrong", Sentence is "Wrong" -> Check correction
+                if(selectedToggle) selectedToggle.classList.add('validated-correct'); // The "Wrong" choice was correct
+
+                if (state.correction === actualSolution) {
+                    // Correction matches -> GREEN
+                    if(selectedCorr) selectedCorr.classList.add('validated-correct');
+                    feedback.textContent = "Perfekt! Fehler erkannt und korrigiert.";
+                    feedback.className = 'feedback success';
+                } else if (!state.correction) {
+                    // No correction selected -> RED Warning
+                    feedback.textContent = "Bitte wählen Sie noch die Korrektur aus.";
+                    feedback.className = 'feedback error';
+                } else {
+                    // Wrong correction -> RED
+                    if(selectedCorr) selectedCorr.classList.add('validated-wrong');
+                    feedback.textContent = "Fehler erkannt, aber falsche Korrektur. Richtig ist: " + actualSolution;
+                    feedback.className = 'feedback error';
+                }
+            }
+        } else {
+            // Decision does NOT match reality (User wrong) -> RED
+            if(selectedToggle) selectedToggle.classList.add('validated-wrong');
+            
+            if (state.decision === 'correct') {
+                feedback.textContent = "Falsch. Dieser Satz enthält einen Fehler.";
+            } else {
+                feedback.textContent = "Falsch. Dieser Satz ist eigentlich richtig.";
+            }
+            feedback.className = 'feedback error';
+        }
+        
+        feedback.style.display = 'block';
+    }
+
+    // 4. RESET (Zurücksetzen)
+    function resetLocal(cardId) {
+        userState[cardId] = {};
+        const card = document.getElementById(cardId);
+        
+        // Remove all status classes
+        card.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('selected', 'validated-correct', 'validated-wrong'));
+        card.querySelectorAll('.corr-btn').forEach(b => b.classList.remove('selected', 'validated-correct', 'validated-wrong'));
+        
+        // Reset Areas
+        card.querySelector('.correction-area').style.display = 'none';
+        
+        // Reset Feedback
+        const feedback = card.querySelector('.feedback');
+        feedback.style.display = 'none';
+        feedback.textContent = '';
+    }
+
+    // 5. SOLVE (Lösung anzeigen)
+    function solveLocal(cardId) {
+        resetLocal(cardId); // Clear user mess first
+
+        const card = document.getElementById(cardId);
+        const actualStatus = card.getAttribute('data-status');
+        const actualSolution = card.getAttribute('data-solution');
+        const feedback = card.querySelector('.feedback');
+        
+        // Visually select the correct buttons (Green)
+        const btns = card.querySelectorAll('.toggle-btn');
+        btns.forEach(btn => {
+            if(actualStatus === 'correct' && btn.textContent === 'RICHTIG') {
+                btn.classList.add('validated-correct');
+            }
+            if(actualStatus === 'wrong' && btn.textContent === 'FALSCH') {
+                btn.classList.add('validated-correct');
+                card.querySelector('.correction-area').style.display = 'block';
+                
+                // Select correct correction
+                const corrBtns = card.querySelectorAll('.corr-btn');
+                corrBtns.forEach(cBtn => {
+                    if(cBtn.textContent === actualSolution) cBtn.classList.add('validated-correct');
+                });
+            }
+        });
+
+        // Show feedback text
+        feedback.style.display = 'block';
+        feedback.className = 'feedback success';
+        feedback.textContent = "Lösung angezeigt.";
+    }
+</script>
+
+</body>
+</html>
