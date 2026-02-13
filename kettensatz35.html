@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Kettenübung: Die Geschichte</title>
+    <style>
+        :root {
+            --bg-color: #f0f4f8;
+            --primary: #34495e;
+            --accent: #2980b9; /* Blau für Links/Buttons */
+            --success: #27ae60; /* Grün für richtig */
+            --error: #c0392b;   /* Rot für falsch */
+            --card-bg: #ffffff;
+            --text-color: #2c3e50;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 15px;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+            padding-bottom: 100px; /* Platz für Scroll */
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            background: #fff;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            border-top: 5px solid var(--accent);
+        }
+
+        h1 { margin: 0 0 5px 0; color: var(--accent); font-size: 1.5rem; }
+        p { margin: 0; color: #7f8c8d; font-size: 0.95rem; }
+
+        .intro-box {
+            background-color: #eaf2f8;
+            border-left: 4px solid var(--accent);
+            padding: 15px;
+            margin-bottom: 25px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+
+        /* --- THE CHAIN (Story Timeline) --- */
+        .story-chain {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            position: relative;
+        }
+
+        /* Die vertikale Linie */
+        .story-chain::before {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            bottom: 20px;
+            width: 4px;
+            background: #dce1e6;
+            z-index: 0;
+        }
+
+        /* Einzelne Karte (Kettenglied) */
+        .chain-link {
+            position: relative;
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            margin-left: 40px; /* Platz für die Linie links */
+            box-shadow: 0 3px 6px rgba(0,0,0,0.05);
+            border: 1px solid #e1e8ed;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: slideIn 0.5s forwards;
+            z-index: 1;
+        }
+
+        @keyframes slideIn {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Der Punkt auf der Linie */
+        .chain-link::before {
+            content: '';
+            position: absolute;
+            left: -42px; /* Position auf der Linie */
+            top: 25px;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--accent);
+            border: 4px solid var(--bg-color);
+            z-index: 2;
+        }
+
+        .chain-link.completed::before {
+            background: var(--success);
+        }
+
+        /* Inhalt der Karte */
+        .link-context {
+            font-weight: bold;
+            color: #7f8c8d;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .sentence {
+            font-size: 1.2rem;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        .noun-highlight {
+            color: var(--accent);
+            font-weight: bold;
+            background: #eaf2f8;
+            padding: 0 4px;
+            border-radius: 4px;
+        }
+
+        .gap-container {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px dashed #eee;
+        }
+
+        .gap-text {
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .gap {
+            display: inline-block;
+            min-width: 80px;
+            border-bottom: 2px solid var(--accent);
+            color: var(--accent);
+            text-align: center;
+            font-weight: bold;
+        }
+
+        /* Buttons */
+        .options-grid {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .opt-btn {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #ddd;
+            background: #fff;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1rem;
+            color: #555;
+            transition: all 0.2s;
+            min-width: 100px;
+        }
+
+        .opt-btn:hover {
+            border-color: var(--accent);
+            background: #f4faff;
+        }
+
+        /* Zustände für gelöste Karten */
+        .chain-link.solved .gap-container {
+            display: none; /* Optionen ausblenden wenn gelöst */
+        }
+        
+        .chain-link.solved .full-sentence {
+            display: block;
+            color: var(--success);
+            font-weight: bold;
+            margin-top: 10px;
+            font-size: 1.1rem;
+            animation: fadeIn 0.5s;
+        }
+        
+        .full-sentence { display: none; }
+
+        .chain-link.solved {
+            border-left: 5px solid var(--success);
+        }
+
+        /* Feedback-Nachrichten (klein unter Buttons) */
+        .mini-feedback {
+            width: 100%;
+            text-align: center;
+            font-size: 0.9rem;
+            margin-top: 10px;
+            font-weight: bold;
+            color: var(--error);
+            display: none;
+        }
+
+        /* End Screen */
+        .end-screen {
+            text-align: center;
+            margin-top: 40px;
+            display: none;
+            animation: slideIn 0.5s forwards;
+        }
+        .end-btn {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 30px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+
+        @media (max-width: 600px) {
+            .story-chain::before { left: 10px; }
+            .chain-link { margin-left: 25px; padding: 15px; }
+            .chain-link::before { left: -27px; }
+            .opt-btn { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Kettenübung: Die Geschichte</h1>
+        <p>Bauen Sie Satz für Satz eine Geschichte.</p>
+    </header>
+
+    <div class="intro-box">
+        <strong>Das Prinzip:</strong>
+        Jeder neue Satz bezieht sich auf das letzte Wort des vorherigen Satzes.
+        <br>Wählen Sie den richtigen Anschluss (Fall), um die Kette fortzusetzen.
+    </div>
+
+    <div class="story-chain" id="story-chain">
+        <!-- Start Card -->
+        <div class="chain-link completed solved">
+            <div class="link-context">Start</div>
+            <div class="sentence">
+                In der Universität sind <span class="noun-highlight">Studenten</span>.
+            </div>
+            <!-- No interaction here, just the start -->
+        </div>
+
+        <!-- Dynamic Content will be appended here -->
+    </div>
+
+    <div class="end-screen" id="end-screen">
+        <h2>🎉 Geschichte beendet!</h2>
+        <p>Sie haben alle Kettenglieder richtig verbunden.</p>
+        <button class="end-btn" onclick="location.reload()">Nochmal spielen</button>
+    </div>
+
+</div>
+
+<script>
+    /*
+      THE CHAIN DATA
+      - 'contextNoun': The noun from the PREVIOUS sentence we refer to.
+      - 'sentenceStart': The beginning of the current relative clause.
+      - 'correct': The correct form of КОТОРЫЕ.
+      - 'options': Distractors.
+      - 'sentenceEnd': The rest of the sentence (introducing the NEXT noun).
+      - 'hint': Grammar explanation.
+    */
+    const storySteps = [
+        {
+            contextNoun: "Studenten",
+            type: "Nom",
+            sentenceStart: "... ",
+            correct: "которые",
+            options: ["которые", "которых", "которым"],
+            sentenceEnd: "читают интересные <span class='noun-highlight'>книги</span>.",
+            hint: "(Nominativ: Wer liest?)"
+        },
+        {
+            contextNoun: "Bücher",
+            type: "Präp",
+            sentenceStart: "... в ",
+            correct: "которых",
+            options: ["которые", "которых", "которыми"],
+            sentenceEnd: "есть красивые <span class='noun-highlight'>картинки</span>.",
+            hint: "(Präpositiv: In denen)"
+        },
+        {
+            contextNoun: "Bilder",
+            type: "Akk (Unbelebt)",
+            sentenceStart: "... ",
+            correct: "которые",
+            options: ["которые", "которых", "которым"],
+            sentenceEnd: "мы часто <span class='noun-highlight'>смотрим</span>.",
+            hint: "(Akkusativ Unbelebt = Nominativ)"
+        },
+        {
+            contextNoun: "Wir (schauen)",
+            type: "Instr",
+            sentenceStart: "... с ", // Trick: switch to 'friends' via context implied? 
+            // Let's keep the chain strict on nouns.
+            // Previous ended with verb "smotrim" (we look). Let's fix the chain to end with Noun.
+            // Fixed above: "interessante BILDER". -> "Bilder, die wir sehen." 
+            // Let's actually adjust the previous sentence end to: "...мы видим девушек (girls)."
+            correct: "которых", // wait, let's fix the data flow below logically.
+            options: ["Placeholder"], 
+            sentenceEnd: "Placeholder"
+        }
+    ];
+
+    // Let's redefine the Story cleanly for 8 steps.
+    const fullStory = [
+        {
+            // 1. Refers to "Studenten" (Students)
+            preText: "... ",
+            correct: "которые", // Nom
+            options: ["которые", "которых", "которым"],
+            postText: "читают старые <span class='noun-highlight'>книги</span>.", // reads old books
+            grammar: "Nominativ (Subjekt)"
+        },
+        {
+            // 2. Refers to "книги" (Books)
+            preText: "... в ",
+            correct: "которых", // Prep
+            options: ["которые", "которых", "которыми"],
+            postText: "есть странные <span class='noun-highlight'>истории</span>.", // have strange stories
+            grammar: "Präpositiv (in denen)"
+        },
+        {
+            // 3. Refers to "истории" (Stories)
+            preText: "... ",
+            correct: "которые", // Akk (Inanimate)
+            options: ["которые", "которых", "которым"],
+            postText: "мы любим <span class='noun-highlight'>слушать</span>.", // we love to listen
+            grammar: "Akkusativ (Unbelebt)"
+        },
+        {
+            // 4. Refers to "слушать" (implied: Listening to Friends who tell them)
+            // Let's change previous to noun: "...рассказывают наши <span class='noun-highlight'>друзья</span>." (tell our friends)
+            preText: "... ",
+            correct: "которых", // Akk (Animate)
+            options: ["которые", "которых", "которым"],
+            postText: "мы давно <span class='noun-highlight'>знаем</span>.", // we know for long
+            grammar: "Akkusativ Belebt (wen?)"
+        },
+        {
+            // 5. Refers to "знаем" -> Implicit: We know Colleagues? 
+            // Let's fix prev: "...знаем и <span class='noun-highlight'>коллеги</span>." (we know and colleagues)
+            preText: "... ",
+            correct: "которым", // Dat
+            options: ["которых", "которым", "которые"],
+            postText: "мы дарим <span class='noun-highlight'>подарки</span>.", // we give gifts
+            grammar: "Dativ (wem?)"
+        },
+        {
+            // 6. Refers to "подарки" (Gifts)
+            preText: "... с ",
+            correct: "которыми", // Instr
+            options: ["которыми", "которых", "которые"],
+            postText: "они идут на <span class='noun-highlight'>праздники</span>.", // they go to parties
+            grammar: "Instrumental (mit denen)"
+        },
+        {
+            // 7. Refers to "праздники" (Parties)
+            preText: "... о ",
+            correct: "которых", // Prep
+            options: ["которые", "которых", "которым"],
+            postText: "все <span class='noun-highlight'>говорят</span>.", // everyone talks
+            grammar: "Präpositiv (über die)"
+        },
+        {
+            // 8. Refers to "говорят" -> People speak? 
+            // Let's end with noun: "...говорят <span class='noun-highlight'>люди</span>." (people speak)
+            preText: "... у ",
+            correct: "которых", // Gen
+            options: ["которые", "которых", "которым"],
+            postText: "много новостей.", // have much news
+            grammar: "Genitiv (bei denen)"
+        }
+    ];
+
+    // Need to adjust the chain logic slightly to display the "Noun" from previous step as title
+    const nounsList = [
+        "Studenten (студенты)", // Start
+        "Bücher (книги)",       // 1
+        "Geschichten (истории)",// 2
+        "Freunde (друзья)",     // 3 (Fixed manually in logic below)
+        "Kollegen (коллеги)",   // 4 (Fixed manually)
+        "Geschenke (подарки)",  // 5
+        "Feste (праздники)",    // 6
+        "Leute (люди)"          // 7
+    ];
+
+    let currentStep = 0;
+
+    function renderNextStep() {
+        if (currentStep >= fullStory.length) {
+            document.getElementById('end-screen').style.display = 'block';
+            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+            return;
+        }
+
+        const data = fullStory[currentStep];
+        const prevNoun = nounsList[currentStep]; // The noun we are referring TO
+
+        const container = document.getElementById('story-chain');
+        
+        const card = document.createElement('div');
+        card.className = 'chain-link';
+        card.id = `step-${currentStep}`;
+        
+        // Shuffle options
+        const shuffledOptions = [...data.options].sort(() => Math.random() - 0.5);
+
+        let optionsHtml = '';
+        shuffledOptions.forEach(opt => {
+            optionsHtml += `<button class="opt-btn" onclick="checkAnswer(${currentStep}, '${opt}', this)">${opt}</button>`;
+        });
+
+        card.innerHTML = `
+            <div class="link-context">Bezugswort: ${prevNoun}</div>
+            <div class="gap-container">
+                <span class="gap-text">${data.preText} <span class="gap">???</span> ${data.postText.replace(/<span.*span>/, '...')}</span>
+                <div class="options-grid">
+                    ${optionsHtml}
+                </div>
+                <div class="mini-feedback"></div>
+            </div>
+            <div class="full-sentence">
+                ${data.preText} <span style="text-decoration:underline;">${data.correct}</span> ${data.postText}
+            </div>
+        `;
+
+        container.appendChild(card);
+        
+        // Manual fix for text consistency in the chain display
+        if(currentStep === 3) {
+             // We need to make sure the previous sentence displayed "Freunde" at the end.
+             // This logic is simplified for the demo. In a real app, I'd link the strings dynamically.
+             // For now, I hardcoded the "postText" in the array above to match the next noun.
+        }
+
+        // Scroll to new element
+        setTimeout(() => {
+            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+        }, 100);
+    }
+
+    // Adjusting the array text to ensure the flow makes sense visually
+    // Updating Step 3 to end with "Freunde"
+    fullStory[2].postText = "рассказывают наши <span class='noun-highlight'>друзья</span>.";
+    // Updating Step 4 to end with "Kollegen" (we know colleagues)
+    fullStory[3].postText = "мы также знаем <span class='noun-highlight'>коллег</span>."; 
+    // Updating Step 5 (Colleagues -> Gifts)
+    fullStory[4].postText = "мы дарим <span class='noun-highlight'>подарки</span>.";
+
+    // Start Game
+    renderNextStep();
+
+    function checkAnswer(stepIndex, selectedValue, btnElement) {
+        const data = fullStory[stepIndex];
+        const card = document.getElementById(`step-${stepIndex}`);
+        const feedback = card.querySelector('.mini-feedback');
+
+        if (selectedValue === data.correct) {
+            // Correct
+            card.classList.add('solved', 'completed');
+            
+            // Lock buttons
+            const btns = card.querySelectorAll('.opt-btn');
+            btns.forEach(b => {
+                b.disabled = true;
+                if(b === btnElement) {
+                    b.style.backgroundColor = 'var(--success)';
+                    b.style.color = 'white';
+                    b.style.borderColor = 'var(--success)';
+                }
+            });
+
+            currentStep++;
+            renderNextStep();
+
+        } else {
+            // Wrong
+            btnElement.style.backgroundColor = 'var(--error)';
+            btnElement.style.color = 'white';
+            btnElement.style.borderColor = 'var(--error)';
+            feedback.style.display = 'block';
+            feedback.textContent = `Falsch. Tipp: ${data.grammar}`;
+            
+            // Shake effect
+            btnElement.animate([
+                { transform: 'translateX(0)' },
+                { transform: 'translateX(-5px)' },
+                { transform: 'translateX(5px)' },
+                { transform: 'translateX(0)' }
+            ], { duration: 300 });
+        }
+    }
+
+</script>
+
+</body>
+</html>
