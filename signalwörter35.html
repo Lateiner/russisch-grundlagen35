@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Lückentext: Signalwörter (КОТОРЫЕ)</title>
+    <style>
+        :root {
+            --primary: #3498db;     /* Blau */
+            --secondary: #2c3e50;   /* Dunkel */
+            --highlight: #e67e22;   /* Orange für Signalwörter */
+            --success: #27ae60;     /* Grün */
+            --error: #c0392b;       /* Rot */
+            --bg: #f4f6f8;
+            --card-bg: #ffffff;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--secondary);
+            margin: 0;
+            padding: 15px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding-bottom: 50px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        h1 { margin: 0 0 10px 0; color: var(--primary); font-size: 1.5rem; }
+        .subtitle { color: #7f8c8d; font-size: 0.95rem; }
+
+        .intro-box {
+            background-color: #eaf2f8;
+            border-left: 5px solid var(--primary);
+            padding: 15px;
+            margin-bottom: 25px;
+            border-radius: 4px;
+            font-size: 0.95rem;
+        }
+
+        .signal-legend {
+            font-weight: bold;
+            color: var(--highlight);
+        }
+
+        /* Task Card */
+        .task-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            border: 1px solid #e1e8ed;
+        }
+
+        .task-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #f0f0f0;
+            padding-bottom: 10px;
+        }
+
+        .task-num {
+            font-weight: bold;
+            color: #95a5a6;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+        }
+
+        .hint-badge {
+            background-color: #f1f2f6;
+            color: #555;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+        }
+
+        /* Sentence Display */
+        .sentence-box {
+            font-size: 1.15rem;
+            margin-bottom: 20px;
+            padding: 10px;
+            background: #fafafa;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .signal-word {
+            color: var(--highlight);
+            font-weight: bold;
+            border-bottom: 2px solid var(--highlight);
+            cursor: help;
+        }
+
+        .gap {
+            display: inline-block;
+            min-width: 80px;
+            border-bottom: 2px solid #ccc;
+            color: var(--primary);
+            font-weight: bold;
+            margin: 0 5px;
+        }
+
+        .gap.filled { border-bottom-color: var(--primary); }
+        .gap.correct { color: var(--success); border-bottom-color: var(--success); }
+        .gap.incorrect { color: var(--error); border-bottom-color: var(--error); }
+
+        /* Answer Options */
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .option-btn {
+            background: white;
+            border: 2px solid #dfe6e9;
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--secondary);
+            font-weight: 500;
+        }
+
+        .option-btn:hover {
+            border-color: var(--primary);
+            background-color: #f4faff;
+        }
+
+        .option-btn.selected {
+            background-color: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        /* Feedback Area */
+        .feedback {
+            min-height: 24px;
+            font-size: 0.95rem;
+            font-weight: bold;
+            margin-top: 10px;
+            text-align: center;
+        }
+        .feedback.success { color: var(--success); }
+        .feedback.error { color: var(--error); }
+
+        /* Controls */
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            border-top: 1px solid #f0f0f0;
+            padding-top: 15px;
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.9rem;
+            transition: opacity 0.2s;
+        }
+
+        .btn-check { background-color: var(--success); color: white; }
+        .btn-reset { background-color: #95a5a6; color: white; }
+        .btn-solve { background-color: #f39c12; color: white; }
+        
+        .action-btn:active { opacity: 0.8; }
+
+        @media (max-width: 600px) {
+            h1 { font-size: 1.3rem; }
+            .sentence-box { font-size: 1rem; }
+            .controls { flex-wrap: wrap; }
+            .action-btn { min-width: 45%; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Lückentext: Signalwörter</h1>
+        <div class="subtitle">Ergänzen Sie das richtige Relativpronomen</div>
+    </header>
+
+    <div class="intro-box">
+        <p><strong>Anleitung:</strong></p>
+        <p>1. Schauen Sie auf das <span class="signal-legend">Signalwort</span> (Verb oder Präposition).</p>
+        <p>2. Überlegen Sie: Welchen Fall verlangt dieses Wort?</p>
+        <p>3. Wählen Sie die richtige Form aus den Optionen.</p>
+    </div>
+
+    <!-- AUFGABE 1: Dativ (Signal: helfen/помогать) -->
+    <div class="task-card" id="task1">
+        <div class="task-header">
+            <span class="task-num">Aufgabe 1</span>
+            <span class="hint-badge">Dativ (Wem?)</span>
+        </div>
+        
+        <div class="sentence-box">
+            Это студенты, <span class="gap">...</span> мы <span class="signal-word" title="помогать + Dativ (helfen)">помогаем</span>.
+        </div>
+
+        <div class="options-grid">
+            <button class="option-btn" onclick="selectOption('task1', 'которые')">которые</button>
+            <button class="option-btn" onclick="selectOption('task1', 'которых')">которых</button>
+            <button class="option-btn" onclick="selectOption('task1', 'которым')">которым</button>
+        </div>
+
+        <div class="feedback"></div>
+
+        <div class="controls">
+            <button class="action-btn btn-check" onclick="checkTask('task1', 'которым')">Überprüfen</button>
+            <button class="action-btn btn-reset" onclick="resetTask('task1')">Zurücksetzen</button>
+            <button class="action-btn btn-solve" onclick="solveTask('task1', 'которым')">Lösung</button>
+        </div>
+    </div>
+
+    <!-- AUFGABE 2: Genitiv (Signal: Verneinung 'нет') -->
+    <div class="task-card" id="task2">
+        <div class="task-header">
+            <span class="task-num">Aufgabe 2</span>
+            <span class="hint-badge">Genitiv (Verneinung)</span>
+        </div>
+        
+        <div class="sentence-box">
+            Это люди, у <span class="gap">...</span> <span class="signal-word" title="нет + Genitiv (es gibt nicht)">нет</span> денег.
+        </div>
+
+        <div class="options-grid">
+            <button class="option-btn" onclick="selectOption('task2', 'которые')">которые</button>
+            <button class="option-btn" onclick="selectOption('task2', 'которых')">которых</button>
+            <button class="option-btn" onclick="selectOption('task2', 'которыми')">которыми</button>
+        </div>
+
+        <div class="feedback"></div>
+
+        <div class="controls">
+            <button class="action-btn btn-check" onclick="checkTask('task2', 'которых')">Überprüfen</button>
+            <button class="action-btn btn-reset" onclick="resetTask('task2')">Zurücksetzen</button>
+            <button class="action-btn btn-solve" onclick="solveTask('task2', 'которых')">Lösung</button>
+        </div>
+    </div>
+
+    <!-- AUFGABE 3: Akkusativ Belebt (Signal: sehen/видеть) -->
+    <div class="task-card" id="task3">
+        <div class="task-header">
+            <span class="task-num">Aufgabe 3</span>
+            <span class="hint-badge">Akkusativ (Belebt)</span>
+        </div>
+        
+        <div class="sentence-box">
+            Вот друзья, <span class="gap">...</span> я часто <span class="signal-word" title="видеть + Akkusativ (sehen)">вижу</span>.
+        </div>
+
+        <div class="options-grid">
+            <button class="option-btn" onclick="selectOption('task3', 'которые')">которые</button>
+            <button class="option-btn" onclick="selectOption('task3', 'которых')">которых</button>
+            <button class="option-btn" onclick="selectOption('task3', 'которым')">которым</button>
+        </div>
+
+        <div class="feedback"></div>
+
+        <div class="controls">
+            <button class="action-btn btn-check" onclick="checkTask('task3', 'которых')">Überprüfen</button>
+            <button class="action-btn btn-reset" onclick="resetTask('task3')">Zurücksetzen</button>
+            <button class="action-btn btn-solve" onclick="solveTask('task3', 'которых')">Lösung</button>
+        </div>
+    </div>
+
+    <!-- AUFGABE 4: Instrumental (Signal: mit/с) -->
+    <div class="task-card" id="task4">
+        <div class="task-header">
+            <span class="task-num">Aufgabe 4</span>
+            <span class="hint-badge">Instrumental (Mit wem?)</span>
+        </div>
+        
+        <div class="sentence-box">
+            Это коллеги, <span class="signal-word" title="с + Instrumental (mit)">с</span> <span class="gap">...</span> мы работаем.
+        </div>
+
+        <div class="options-grid">
+            <button class="option-btn" onclick="selectOption('task4', 'которыми')">которыми</button>
+            <button class="option-btn" onclick="selectOption('task4', 'которых')">которых</button>
+            <button class="option-btn" onclick="selectOption('task4', 'которые')">которые</button>
+        </div>
+
+        <div class="feedback"></div>
+
+        <div class="controls">
+            <button class="action-btn btn-check" onclick="checkTask('task4', 'которыми')">Überprüfen</button>
+            <button class="action-btn btn-reset" onclick="resetTask('task4')">Zurücksetzen</button>
+            <button class="action-btn btn-solve" onclick="solveTask('task4', 'которыми')">Lösung</button>
+        </div>
+    </div>
+
+    <!-- AUFGABE 5: Präpositiv (Signal: über/о) -->
+    <div class="task-card" id="task5">
+        <div class="task-header">
+            <span class="task-num">Aufgabe 5</span>
+            <span class="hint-badge">Präpositiv (Worüber?)</span>
+        </div>
+        
+        <div class="sentence-box">
+            Это фильмы, <span class="signal-word" title="о + Präpositiv (über)">о</span> <span class="gap">...</span> все говорят.
+        </div>
+
+        <div class="options-grid">
+            <button class="option-btn" onclick="selectOption('task5', 'которых')">которых</button>
+            <button class="option-btn" onclick="selectOption('task5', 'которые')">которые</button>
+            <button class="option-btn" onclick="selectOption('task5', 'которым')">которым</button>
+        </div>
+
+        <div class="feedback"></div>
+
+        <div class="controls">
+            <button class="action-btn btn-check" onclick="checkTask('task5', 'которых')">Überprüfen</button>
+            <button class="action-btn btn-reset" onclick="resetTask('task5')">Zurücksetzen</button>
+            <button class="action-btn btn-solve" onclick="solveTask('task5', 'которых')">Lösung</button>
+        </div>
+    </div>
+
+    <!-- AUFGABE 6: Dativ (Signal: anrufen/звонить) -->
+    <div class="task-card" id="task6">
+        <div class="task-header">
+            <span class="task-num">Aufgabe 6</span>
+            <span class="hint-badge">Dativ (Wem?)</span>
+        </div>
+        
+        <div class="sentence-box">
+            Это люди, <span class="gap">...</span> я <span class="signal-word" title="звонить + Dativ (anrufen)">звоню</span>.
+        </div>
+
+        <div class="options-grid">
+            <button class="option-btn" onclick="selectOption('task6', 'которым')">которым</button>
+            <button class="option-btn" onclick="selectOption('task6', 'которых')">которых</button>
+            <button class="option-btn" onclick="selectOption('task6', 'которые')">которые</button>
+        </div>
+
+        <div class="feedback"></div>
+
+        <div class="controls">
+            <button class="action-btn btn-check" onclick="checkTask('task6', 'которым')">Überprüfen</button>
+            <button class="action-btn btn-reset" onclick="resetTask('task6')">Zurücksetzen</button>
+            <button class="action-btn btn-solve" onclick="solveTask('task6', 'которым')">Lösung</button>
+        </div>
+    </div>
+
+    <!-- AUFGABE 7: Akkusativ Unbelebt (Signal: lesen/читать) -->
+    <div class="task-card" id="task7">
+        <div class="task-header">
+            <span class="task-num">Aufgabe 7</span>
+            <span class="hint-badge">Akkusativ Unbelebt</span>
+        </div>
+        
+        <div class="sentence-box">
+            Это книги, <span class="gap">...</span> я <span class="signal-word" title="читать + Akkusativ (lesen)">читаю</span>.
+        </div>
+
+        <div class="options-grid">
+            <button class="option-btn" onclick="selectOption('task7', 'которые')">которые</button>
+            <button class="option-btn" onclick="selectOption('task7', 'которых')">которых</button>
+            <button class="option-btn" onclick="selectOption('task7', 'которыми')">которыми</button>
+        </div>
+
+        <div class="feedback"></div>
+
+        <div class="controls">
+            <button class="action-btn btn-check" onclick="checkTask('task7', 'которые')">Überprüfen</button>
+            <button class="action-btn btn-reset" onclick="resetTask('task7')">Zurücksetzen</button>
+            <button class="action-btn btn-solve" onclick="solveTask('task7', 'которые')">Lösung</button>
+        </div>
+    </div>
+    
+    <!-- AUFGABE 8: Dativ (Signal: zu/к) -->
+    <div class="task-card" id="task8">
+        <div class="task-header">
+            <span class="task-num">Aufgabe 8</span>
+            <span class="hint-badge">Dativ (Ziel)</span>
+        </div>
+        
+        <div class="sentence-box">
+            Это врачи, <span class="signal-word" title="к + Dativ (zu)">к</span> <span class="gap">...</span> мы идем.
+        </div>
+
+        <div class="options-grid">
+            <button class="option-btn" onclick="selectOption('task8', 'которым')">которым</button>
+            <button class="option-btn" onclick="selectOption('task8', 'которых')">которых</button>
+            <button class="option-btn" onclick="selectOption('task8', 'которые')">которые</button>
+        </div>
+
+        <div class="feedback"></div>
+
+        <div class="controls">
+            <button class="action-btn btn-check" onclick="checkTask('task8', 'которым')">Überprüfen</button>
+            <button class="action-btn btn-reset" onclick="resetTask('task8')">Zurücksetzen</button>
+            <button class="action-btn btn-solve" onclick="solveTask('task8', 'которым')">Lösung</button>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // Selected state storage
+    let userSelections = {};
+
+    function selectOption(taskId, value) {
+        const container = document.getElementById(taskId);
+        const buttons = container.querySelectorAll('.option-btn');
+        const gap = container.querySelector('.gap');
+        const feedback = container.querySelector('.feedback');
+
+        // Reset Styles
+        buttons.forEach(btn => btn.classList.remove('selected'));
+        gap.classList.remove('correct', 'incorrect');
+        gap.classList.add('filled');
+        feedback.textContent = "";
+
+        // Set visual selection
+        event.target.classList.add('selected');
+        
+        // Update Gap Text visually
+        gap.textContent = value;
+        
+        // Store Value
+        userSelections[taskId] = value;
+    }
+
+    function checkTask(taskId, correctValue) {
+        const container = document.getElementById(taskId);
+        const gap = container.querySelector('.gap');
+        const feedback = container.querySelector('.feedback');
+        const userValue = userSelections[taskId];
+
+        if (!userValue) {
+            feedback.textContent = "Bitte wählen Sie eine Antwort aus.";
+            feedback.className = "feedback";
+            return;
+        }
+
+        if (userValue === correctValue) {
+            gap.classList.add('correct');
+            gap.classList.remove('incorrect');
+            feedback.textContent = "Richtig! ✓";
+            feedback.className = "feedback success";
+        } else {
+            gap.classList.add('incorrect');
+            gap.classList.remove('correct');
+            feedback.textContent = "Falsch. Achten Sie auf das Signalwort.";
+            feedback.className = "feedback error";
+        }
+    }
+
+    function resetTask(taskId) {
+        const container = document.getElementById(taskId);
+        const buttons = container.querySelectorAll('.option-btn');
+        const gap = container.querySelector('.gap');
+        const feedback = container.querySelector('.feedback');
+
+        buttons.forEach(btn => btn.classList.remove('selected'));
+        gap.textContent = "...";
+        gap.classList.remove('correct', 'incorrect', 'filled');
+        feedback.textContent = "";
+        
+        userSelections[taskId] = null;
+    }
+
+    function solveTask(taskId, correctValue) {
+        const container = document.getElementById(taskId);
+        const buttons = container.querySelectorAll('.option-btn');
+        const gap = container.querySelector('.gap');
+        const feedback = container.querySelector('.feedback');
+
+        // Reset UI first
+        resetTask(taskId);
+
+        // Visually select correct button
+        buttons.forEach(btn => {
+            if (btn.textContent === correctValue) {
+                btn.classList.add('selected');
+            }
+        });
+
+        // Fill gap
+        gap.textContent = correctValue;
+        gap.classList.add('correct');
+        userSelections[taskId] = correctValue;
+
+        feedback.textContent = "Lösung angezeigt.";
+        feedback.className = "feedback";
+    }
+</script>
+
+</body>
+</html>
